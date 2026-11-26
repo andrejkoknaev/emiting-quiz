@@ -19,18 +19,18 @@ const cardVariants = {
 
 function CollageLogo() {
   const letters = [
-    { char: 'Э', bg: 'bg-[#646373]', text: 'text-[#FAF3E8]', rot: '-rotate-3' },
-    { char: 'М', bg: 'bg-[#FAF3E8]', text: 'text-[#E32026]', rot: 'rotate-2' },
-    { char: 'И', bg: 'bg-[#FAF3E8]', text: 'text-[#1A1A1A]', rot: '-rotate-2' },
-    { char: 'Т', bg: 'bg-[#1A1A1A]', text: 'text-[#FAF3E8]', rot: 'rotate-3' },
-    { char: 'И', bg: 'bg-[#E32026]', text: 'text-[#FAF3E8]', rot: '-rotate-1' },
-    { char: 'Н', bg: 'bg-[#FAF3E8]', text: 'text-[#1A1A1A]', rot: 'rotate-2' },
+    { char: 'Э', bg: 'bg-[#646373]', text: 'text-[#F4EBE1]', rot: '-rotate-3' },
+    { char: 'М', bg: 'bg-[#F4EBE1]', text: 'text-[#E32026]', rot: 'rotate-2' },
+    { char: 'И', bg: 'bg-[#F4EBE1]', text: 'text-[#1A1A1A]', rot: '-rotate-2' },
+    { char: 'Т', bg: 'bg-[#1A1A1A]', text: 'text-[#F4EBE1]', rot: 'rotate-3' },
+    { char: 'И', bg: 'bg-[#E32026]', text: 'text-[#F4EBE1]', rot: '-rotate-1' },
+    { char: 'Н', bg: 'bg-[#F4EBE1]', text: 'text-[#1A1A1A]', rot: 'rotate-2' },
     { char: 'Г', bg: 'bg-[#646373]', text: 'text-[#F9B800]', rot: '-rotate-3' },
   ];
   return (
     <div className="inline-flex items-center gap-1.5 select-none">
       {letters.map((item, idx) => (
-        <span key={idx} className={`font-display inline-flex items-center justify-center w-12 h-14 sm:w-16 sm:h-[72px] text-3xl sm:text-5xl shadow-md ${item.bg} ${item.text} ${item.rot}`}>
+        <span key={idx} className={`font-display inline-flex items-center justify-center w-[48px] h-[56px] sm:w-[72px] sm:h-[84px] text-[36px] sm:text-[58px] shadow-lg shrink-0 ${item.bg} ${item.text} ${item.rot}`}>
           {item.char}
         </span>
       ))}
@@ -157,42 +157,48 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-full flex flex-col craft-noise">
+    <div className="min-h-full flex flex-col craft-noise bg-[#D6C2AD]">
       <div className="pointer-events-none fixed top-0 left-0 right-0 z-0">
         <div className="h-12 bg-[#F28752] torn-top opacity-90" />
         <div className="h-9 -mt-8 bg-[#EB5618] torn-top" />
       </div>
 
-      <header className="relative z-10 w-full max-w-lg mx-auto px-5 pt-12 pb-4 flex flex-col items-center justify-center gap-5">
+      <header className="relative z-10 w-full max-w-[460px] mx-auto px-4 pt-12 pb-2 flex flex-col items-center justify-center gap-6">
         <CollageLogo />
         {currentStepId !== 'ticket' && (
-          <div className="flex items-center gap-2 bg-[#FAF3E8] px-5 py-2 rounded-full shadow-sm border border-[#1A1A1A]/10">
-            <span className="font-display text-sm text-[#1A1A1A]/50 uppercase tracking-widest mt-0.5">Шаг</span>
-            <span className="font-mono-code text-base font-bold text-[#EB5618]">0{currentIndex + 1}</span>
-            <span className="text-base text-[#1A1A1A]/30">/</span>
-            <span className="font-mono-code text-base font-semibold text-[#1A1A1A]/50">0{activeSteps.length - 1}</span>
+          <div className="flex items-center gap-2 sm:gap-3 bg-[#F4EBE1] px-6 py-2.5 sm:px-7 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm">
+            <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/50 uppercase tracking-widest leading-none translate-y-[2px]">Шаг</span>
+            <span className="font-mono-code text-base sm:text-lg font-bold text-[#EB5618] leading-none translate-y-[1px]">0{currentIndex + 1}</span>
+            <span className="text-base sm:text-lg text-[#1A1A1A]/30 leading-none">/</span>
+            <span className="font-mono-code text-base sm:text-lg font-semibold text-[#1A1A1A]/50 leading-none translate-y-[1px]">0{activeSteps.length - 1}</span>
           </div>
         )}
       </header>
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:py-6">
-        <div className="w-full max-w-lg">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-4 sm:py-6">
+        <div className="w-[92%] sm:w-full max-w-[460px] mx-auto">
           <AnimatePresence mode="wait" custom={direction}>
             {currentStepId === 'name' && (
-              <motion.section key="name" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#FAF3E8] p-6 sm:p-10 rounded-3xl shadow-xl">
+              <motion.section key="name" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
                 <h1 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Как вас зовут?</h1>
-                <input 
-                  ref={inputRef} 
-                  type="text" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  onKeyDown={handleKeyDown} 
-                  placeholder="Имя и Фамилия" 
-                  className="w-full bg-white text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-2xl sm:text-3xl font-bold px-6 py-5 rounded-2xl outline-none border-2 border-[#1A1A1A]/10 focus:border-[#EB5618] transition-colors shadow-inner" 
-                />
-                <div className="mt-8 sm:mt-10 flex items-center justify-between">
-                  <span className="text-sm font-bold text-[#1A1A1A]/30 hidden sm:inline">Нажми <kbd className="font-mono-code text-[#1A1A1A]/50">Enter</kbd></span>
-                  <button onClick={goNext} disabled={!canProceed()} className="ml-auto bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 text-[#FAF3E8] font-bold px-8 py-4 rounded-2xl flex items-center gap-3 transition-colors cursor-pointer">
+                <div className="relative">
+                  <input 
+                    ref={inputRef} 
+                    type="text" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    onKeyDown={handleKeyDown} 
+                    className="w-full bg-[#F4EBE1] text-[#1A1A1A] text-xl sm:text-2xl font-bold px-5 py-4 rounded-2xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors relative z-10" 
+                    placeholder=" " 
+                  />
+                  {!name && (
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-bold text-[#1A1A1A]/30 pointer-events-none">
+                      Твоё имя и фамилия
+                    </span>
+                  )}
+                </div>
+                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
+                  <button onClick={goNext} disabled={!canProceed()} className="w-full bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
                     Дальше <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -200,85 +206,106 @@ export default function App() {
             )}
 
             {currentStepId === 'course' && (
-              <motion.section key="course" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#FAF3E8] p-6 sm:p-10 rounded-3xl shadow-xl">
+              <motion.section key="course" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Какой у тебя курс?</h2>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                   {COURSES.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setCourse, item)} className={`py-6 sm:py-8 rounded-2xl font-display text-4xl transition-colors cursor-pointer border-2 ${course === item ? 'bg-[#EB5618] text-white border-[#EB5618]' : 'bg-white border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={item} onClick={() => handleQuickChoice(setCourse, item)} className={`py-4 sm:py-5 rounded-2xl font-display text-3xl transition-colors cursor-pointer border-2 ${course === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {item}
                     </button>
                   ))}
                 </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between">
-                  <button onClick={goBack} className="text-[#1A1A1A]/50 hover:text-[#1A1A1A] font-bold flex items-center gap-2 px-4 py-2 cursor-pointer"><ArrowLeft className="w-5 h-5" /> Назад</button>
+                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft className="w-5 h-5" /> Назад
+                  </button>
+                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2">
+                    Дальше <ArrowRight className="w-5 h-5" />
+                  </button>
                 </div>
               </motion.section>
             )}
 
             {currentStepId === 'institute' && (
-              <motion.section key="institute" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#FAF3E8] p-6 sm:p-10 rounded-3xl shadow-xl">
+              <motion.section key="institute" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Институт?</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {INSTITUTES.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setInstitute, item)} className={`py-5 px-3 rounded-2xl text-center font-display text-xl transition-colors cursor-pointer border-2 ${institute === item ? 'bg-[#EB5618] text-white border-[#EB5618]' : 'bg-white border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={item} onClick={() => handleQuickChoice(setInstitute, item)} className={`py-3 px-2 sm:py-4 rounded-2xl text-center font-display text-lg sm:text-xl transition-colors cursor-pointer border-2 ${institute === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {item}
                     </button>
                   ))}
                 </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between">
-                  <button onClick={goBack} className="text-[#1A1A1A]/50 hover:text-[#1A1A1A] font-bold flex items-center gap-2 px-4 py-2 cursor-pointer"><ArrowLeft className="w-5 h-5" /> Назад</button>
+                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft className="w-5 h-5" /> Назад
+                  </button>
+                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2">
+                    Дальше <ArrowRight className="w-5 h-5" />
+                  </button>
                 </div>
               </motion.section>
             )}
 
             {currentStepId === 'department' && (
-              <motion.section key="department" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#FAF3E8] p-6 sm:p-10 rounded-3xl shadow-xl">
+              <motion.section key="department" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Отделение?</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {DEPARTMENTS.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setDepartment, item)} className={`py-4 px-2 rounded-2xl text-center font-display text-lg sm:text-xl transition-colors cursor-pointer border-2 ${department === item ? 'bg-[#EB5618] text-white border-[#EB5618]' : 'bg-white border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={item} onClick={() => handleQuickChoice(setDepartment, item)} className={`py-3 px-2 rounded-2xl text-center font-display text-[15px] sm:text-lg transition-colors cursor-pointer border-2 ${department === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {item}
                     </button>
                   ))}
                 </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between">
-                  <button onClick={goBack} className="text-[#1A1A1A]/50 hover:text-[#1A1A1A] font-bold flex items-center gap-2 px-4 py-2 cursor-pointer"><ArrowLeft className="w-5 h-5" /> Назад</button>
+                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft className="w-5 h-5" /> Назад
+                  </button>
+                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2">
+                    Дальше <ArrowRight className="w-5 h-5" />
+                  </button>
                 </div>
               </motion.section>
             )}
 
             {currentStepId === 'source' && (
-              <motion.section key="source" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#FAF3E8] p-6 sm:p-10 rounded-3xl shadow-xl">
+              <motion.section key="source" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Откуда ты узнал про нас?</h2>
-                <div className="flex flex-col gap-2 sm:gap-3">
+                <div className="flex flex-col gap-2.5 sm:gap-3">
                   {SOURCE_PRESETS.map(preset => (
-                    <button key={preset.id} onClick={() => setSourceMode(preset.id)} className={`flex items-center justify-between px-6 py-5 rounded-2xl text-left font-bold text-lg transition-colors cursor-pointer border-2 ${sourceMode === preset.id ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]' : 'bg-white border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={preset.id} onClick={() => setSourceMode(preset.id)} className={`flex items-center justify-between px-5 py-4 sm:px-6 sm:py-4 rounded-2xl text-left font-bold text-base sm:text-lg transition-colors border-2 ${sourceMode === preset.id ? 'bg-[#FCD3C1] border-[#EB5618] text-[#1A1A1A]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {preset.label}
-                      {sourceMode === preset.id && <Check className="w-6 h-6 text-[#F9B800]" />}
+                      {sourceMode === preset.id && <Check className="w-5 h-5 sm:w-6 sm:h-6 text-[#EB5618]" />}
                     </button>
                   ))}
                   <AnimatePresence>
                     {sourceMode === 'custom' && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <input ref={inputRef} type="text" value={customSource} onChange={(e) => setCustomSource(e.target.value)} onKeyDown={handleKeyDown} placeholder="Напиши свой вариант..." className="w-full bg-white text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-lg sm:text-xl font-bold px-6 py-5 rounded-2xl outline-none border-2 border-[#1A1A1A]/10 focus:border-[#EB5618] transition-colors mt-1" />
+                        <input ref={inputRef} type="text" value={customSource} onChange={(e) => setCustomSource(e.target.value)} onKeyDown={handleKeyDown} placeholder="Напиши свой вариант..." className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-lg sm:text-xl font-bold px-5 py-4 rounded-2xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors mt-1" />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between">
-                  <button onClick={goBack} className="text-[#1A1A1A]/50 hover:text-[#1A1A1A] font-bold flex items-center gap-2 px-4 py-2 cursor-pointer"><ArrowLeft className="w-5 h-5" /> Назад</button>
-                  <button onClick={goNext} disabled={!canProceed()} className="bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 text-[#FAF3E8] font-bold px-8 py-4 rounded-2xl flex items-center gap-3 transition-colors cursor-pointer">Дальше <ArrowRight className="w-5 h-5" /></button>
+                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft className="w-5 h-5" /> Назад
+                  </button>
+                  <button onClick={goNext} disabled={!canProceed()} className="flex-1 bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    Дальше <ArrowRight className="w-5 h-5" />
+                  </button>
                 </div>
               </motion.section>
             )}
 
             {currentStepId === 'song' && (
-              <motion.section key="song" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#FAF3E8] p-6 sm:p-10 rounded-3xl shadow-xl">
+              <motion.section key="song" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Какая твоя любимая песня?</h2>
-                <input ref={inputRef} type="text" value={song} onChange={(e) => setSong(e.target.value)} onKeyDown={handleKeyDown} placeholder="Исполнитель — Трек" className="w-full bg-white text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-2xl sm:text-3xl font-bold px-6 py-5 rounded-2xl outline-none border-2 border-[#1A1A1A]/10 focus:border-[#EB5618] transition-colors shadow-inner" />
-                <div className="mt-8 sm:mt-10 flex items-center justify-between">
-                  <button onClick={goBack} disabled={isSubmitting} className="text-[#1A1A1A]/50 hover:text-[#1A1A1A] font-bold flex items-center gap-2 px-4 py-2 cursor-pointer"><ArrowLeft className="w-5 h-5" /> Назад</button>
-                  <button onClick={goNext} disabled={!canProceed() || isSubmitting} className="bg-[#EB5618] hover:bg-[#1A1A1A] disabled:bg-[#1A1A1A]/20 text-[#FAF3E8] font-bold px-8 py-4 rounded-2xl flex items-center gap-3 transition-colors cursor-pointer shadow-lg">
+                <input ref={inputRef} type="text" value={song} onChange={(e) => setSong(e.target.value)} onKeyDown={handleKeyDown} placeholder="Исполнитель — Трек" className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-xl sm:text-2xl font-bold px-5 py-4 rounded-2xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors" />
+                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
+                  <button onClick={goBack} disabled={isSubmitting} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <ArrowLeft className="w-5 h-5" /> Назад
+                  </button>
+                  <button onClick={goNext} disabled={!canProceed() || isSubmitting} className="flex-1 bg-[#EB5618] hover:bg-[#1A1A1A] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-lg">
                     {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Грузим...</> : <><Sparkles className="w-5 h-5" /> В лотерею</>}
                   </button>
                 </div>
@@ -286,9 +313,9 @@ export default function App() {
             )}
 
             {currentStepId === 'ticket' && ticketNumber && (
-              <motion.section key="ticket" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-[#FAF3E8] pt-10 pb-8 px-6 sm:px-12 rounded-3xl shadow-2xl text-center overflow-hidden flex flex-col items-center">
-                <div className="absolute top-[35%] -left-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#E3CCB0]" />
-                <div className="absolute top-[35%] -right-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#E3CCB0]" />
+              <motion.section key="ticket" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-[#F4EBE1] pt-10 pb-8 px-6 sm:px-12 rounded-3xl shadow-2xl text-center overflow-hidden flex flex-col items-center">
+                <div className="absolute top-[35%] -left-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#D6C2AD]" />
+                <div className="absolute top-[35%] -right-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#D6C2AD]" />
                 
                 <h2 className="font-display text-4xl sm:text-5xl text-[#1A1A1A] mb-1 sm:mb-2 leading-tight">Ура! Вы в лотерее!</h2>
                 <p className="font-display text-xl sm:text-3xl uppercase tracking-widest text-[#1A1A1A]/60">Ваш номер:</p>
@@ -302,7 +329,7 @@ export default function App() {
                   <span className="font-display text-2xl sm:text-3xl text-[#F9B800] tracking-wide">Заскринь его!</span>
                 </div>
 
-                <div className="w-full max-w-[280px] aspect-[4/3] bg-white border-2 border-dashed border-[#1A1A1A]/20 rounded-3xl flex flex-col items-center justify-center">
+                <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-3xl flex flex-col items-center justify-center">
                   <span className="font-display text-[#1A1A1A]/25 text-xl">Место под фото</span>
                   <span className="text-[#1A1A1A]/30 text-sm font-bold mt-1">(заменим позже)</span>
                 </div>
