@@ -8,10 +8,22 @@
     --bg-paper: #FAF3E8;
     --ink: #1A1A1A;
   }
-  body {
+  
+  body, html {
     font-family: 'Golos Text', sans-serif;
     background-color: var(--bg-craft);
+    overscroll-behavior-y: none;
+  }
+
+  #root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -25,9 +37,5 @@
   background-position: 0 0, 12px 12px;
 }
 
-.torn-top {
-  clip-path: polygon(0% 0%, 100% 0%, 100% 78%, 92% 88%, 84% 72%, 75% 91%, 66% 74%, 55% 86%, 44% 68%, 33% 89%, 22% 73%, 11% 85%, 0% 70%);
-}
-.torn-bottom {
-  clip-path: polygon(0% 25%, 10% 10%, 21% 28%, 32% 12%, 45% 30%, 57% 11%, 68% 26%, 79% 9%, 90% 24%, 100% 14%, 100% 100%, 0% 100%);
-}
+.torn-top { clip-path: polygon(0% 0%, 100% 0%, 100% 78%, 92% 88%, 84% 72%, 75% 91%, 66% 74%, 55% 86%, 44% 68%, 33% 89%, 22% 73%, 11% 85%, 0% 70%); }
+.torn-bottom { clip-path: polygon(0% 25%, 10% 10%, 21% 28%, 32% 12%, 45% 30%, 57% 11%, 68% 26%, 79% 9%, 90% 24%, 100% 14%, 100% 100%, 0% 100%); }
