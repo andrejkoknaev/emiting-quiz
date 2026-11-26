@@ -163,42 +163,40 @@ export default function App() {
         <div className="h-9 -mt-8 bg-[#EB5618] torn-top" />
       </div>
 
-      <header className="relative z-10 w-full max-w-[460px] mx-auto px-4 pt-12 pb-2 flex flex-col items-center justify-center gap-6">
+      <header className="relative z-10 w-full max-w-[500px] mx-auto px-4 pt-12 pb-2 flex flex-col items-center justify-center gap-6">
         <CollageLogo />
         {currentStepId !== 'ticket' && (
-          <div className="flex items-center gap-2 sm:gap-3 bg-[#F4EBE1] px-6 py-2.5 sm:px-7 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm">
-            <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/50 uppercase tracking-widest leading-none translate-y-[2px]">Шаг</span>
-            <span className="font-mono-code text-base sm:text-lg font-bold text-[#EB5618] leading-none translate-y-[1px]">0{currentIndex + 1}</span>
-            <span className="text-base sm:text-lg text-[#1A1A1A]/30 leading-none">/</span>
-            <span className="font-mono-code text-base sm:text-lg font-semibold text-[#1A1A1A]/50 leading-none translate-y-[1px]">0{activeSteps.length - 1}</span>
+          // Увеличенная рамка для шагов и запрет переноса строк (whitespace-nowrap)
+          <div className="flex items-center justify-center gap-2 sm:gap-3 bg-[#F4EBE1] px-8 py-3.5 sm:px-10 sm:py-4 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap">
+            <span className="font-display text-sm sm:text-base text-[#1A1A1A]/50 uppercase tracking-widest leading-none translate-y-[1px]">Шаг</span>
+            <span className="font-mono-code text-lg sm:text-xl font-bold text-[#EB5618] leading-none translate-y-[1px]">0{currentIndex + 1}</span>
+            <span className="text-lg sm:text-xl text-[#1A1A1A]/30 leading-none">/</span>
+            <span className="font-mono-code text-lg sm:text-xl font-semibold text-[#1A1A1A]/50 leading-none translate-y-[1px]">0{activeSteps.length - 1}</span>
           </div>
         )}
       </header>
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-4 sm:py-6">
-        <div className="w-[92%] sm:w-full max-w-[460px] mx-auto">
+        <div className="w-[92%] sm:w-full max-w-[500px] mx-auto">
           <AnimatePresence mode="wait" custom={direction}>
             {currentStepId === 'name' && (
-              <motion.section key="name" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
+              // Скругление карточки стало более мягким: rounded-[32px]
+              <motion.section key="name" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[32px] shadow-xl border border-[#1A1A1A]/5">
                 <h1 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Как вас зовут?</h1>
-                <div className="relative">
-                  <input 
-                    ref={inputRef} 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    onKeyDown={handleKeyDown} 
-                    className="w-full bg-[#F4EBE1] text-[#1A1A1A] text-xl sm:text-2xl font-bold px-5 py-4 rounded-2xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors relative z-10" 
-                    placeholder=" " 
-                  />
-                  {!name && (
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-bold text-[#1A1A1A]/30 pointer-events-none">
-                      Твоё имя и фамилия
-                    </span>
-                  )}
-                </div>
+                
+                <input 
+                  ref={inputRef} 
+                  type="text" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  onKeyDown={handleKeyDown} 
+                  placeholder="Твоё имя и фамилия" 
+                  className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-xl sm:text-2xl font-bold px-6 py-5 rounded-3xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors" 
+                />
+                
                 <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
-                  <button onClick={goNext} disabled={!canProceed()} className="w-full bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  {/* Кнопки тоже стали более мягкими: rounded-3xl */}
+                  <button onClick={goNext} disabled={!canProceed()} className="w-full bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     Дальше <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -206,20 +204,20 @@ export default function App() {
             )}
 
             {currentStepId === 'course' && (
-              <motion.section key="course" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
+              <motion.section key="course" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[32px] shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Какой у тебя курс?</h2>
                 <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                   {COURSES.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setCourse, item)} className={`py-4 sm:py-5 rounded-2xl font-display text-3xl transition-colors cursor-pointer border-2 ${course === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={item} onClick={() => handleQuickChoice(setCourse, item)} className={`py-4 sm:py-5 rounded-3xl font-display text-3xl transition-colors cursor-pointer border-2 ${course === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {item}
                     </button>
                   ))}
                 </div>
                 <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
-                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Назад
                   </button>
-                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2">
+                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-4 rounded-3xl flex items-center justify-center gap-2">
                     Дальше <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -227,20 +225,20 @@ export default function App() {
             )}
 
             {currentStepId === 'institute' && (
-              <motion.section key="institute" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
+              <motion.section key="institute" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[32px] shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Институт?</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {INSTITUTES.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setInstitute, item)} className={`py-3 px-2 sm:py-4 rounded-2xl text-center font-display text-lg sm:text-xl transition-colors cursor-pointer border-2 ${institute === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={item} onClick={() => handleQuickChoice(setInstitute, item)} className={`py-3 px-2 sm:py-4 rounded-3xl text-center font-display text-lg sm:text-xl transition-colors cursor-pointer border-2 ${institute === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {item}
                     </button>
                   ))}
                 </div>
                 <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
-                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Назад
                   </button>
-                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2">
+                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-4 rounded-3xl flex items-center justify-center gap-2">
                     Дальше <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -248,20 +246,20 @@ export default function App() {
             )}
 
             {currentStepId === 'department' && (
-              <motion.section key="department" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
+              <motion.section key="department" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[32px] shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Отделение?</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {DEPARTMENTS.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setDepartment, item)} className={`py-3 px-2 rounded-2xl text-center font-display text-[15px] sm:text-lg transition-colors cursor-pointer border-2 ${department === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={item} onClick={() => handleQuickChoice(setDepartment, item)} className={`py-3 px-2 rounded-3xl text-center font-display text-[15px] sm:text-lg transition-colors cursor-pointer border-2 ${department === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {item}
                     </button>
                   ))}
                 </div>
                 <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
-                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Назад
                   </button>
-                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2">
+                  <button disabled className="flex-1 bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-4 rounded-3xl flex items-center justify-center gap-2">
                     Дальше <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -269,11 +267,11 @@ export default function App() {
             )}
 
             {currentStepId === 'source' && (
-              <motion.section key="source" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
+              <motion.section key="source" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[32px] shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Откуда ты узнал про нас?</h2>
                 <div className="flex flex-col gap-2.5 sm:gap-3">
                   {SOURCE_PRESETS.map(preset => (
-                    <button key={preset.id} onClick={() => setSourceMode(preset.id)} className={`flex items-center justify-between px-5 py-4 sm:px-6 sm:py-4 rounded-2xl text-left font-bold text-base sm:text-lg transition-colors border-2 ${sourceMode === preset.id ? 'bg-[#FCD3C1] border-[#EB5618] text-[#1A1A1A]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
+                    <button key={preset.id} onClick={() => setSourceMode(preset.id)} className={`flex items-center justify-between px-5 py-4 sm:px-6 sm:py-4 rounded-3xl text-left font-bold text-base sm:text-lg transition-colors border-2 ${sourceMode === preset.id ? 'bg-[#FCD3C1] border-[#EB5618] text-[#1A1A1A]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
                       {preset.label}
                       {sourceMode === preset.id && <Check className="w-5 h-5 sm:w-6 sm:h-6 text-[#EB5618]" />}
                     </button>
@@ -281,16 +279,24 @@ export default function App() {
                   <AnimatePresence>
                     {sourceMode === 'custom' && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <input ref={inputRef} type="text" value={customSource} onChange={(e) => setCustomSource(e.target.value)} onKeyDown={handleKeyDown} placeholder="Напиши свой вариант..." className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-lg sm:text-xl font-bold px-5 py-4 rounded-2xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors mt-1" />
+                        <input 
+                          ref={inputRef} 
+                          type="text" 
+                          value={customSource} 
+                          onChange={(e) => setCustomSource(e.target.value)} 
+                          onKeyDown={handleKeyDown} 
+                          placeholder="Напиши свой вариант..." 
+                          className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-lg sm:text-xl font-bold px-6 py-5 rounded-3xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors mt-2" 
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
                 <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
-                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={goBack} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Назад
                   </button>
-                  <button onClick={goNext} disabled={!canProceed()} className="flex-1 bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={goNext} disabled={!canProceed()} className="flex-1 bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     Дальше <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -298,14 +304,22 @@ export default function App() {
             )}
 
             {currentStepId === 'song' && (
-              <motion.section key="song" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-3xl shadow-xl border border-[#1A1A1A]/5">
+              <motion.section key="song" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[32px] shadow-xl border border-[#1A1A1A]/5">
                 <h2 className="font-display text-3xl sm:text-4xl leading-tight text-[#1A1A1A] mb-6 sm:mb-8">Какая твоя любимая песня?</h2>
-                <input ref={inputRef} type="text" value={song} onChange={(e) => setSong(e.target.value)} onKeyDown={handleKeyDown} placeholder="Исполнитель — Трек" className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 text-xl sm:text-2xl font-bold px-5 py-4 rounded-2xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors" />
+                <input 
+                  ref={inputRef} 
+                  type="text" 
+                  value={song} 
+                  onChange={(e) => setSong(e.target.value)} 
+                  onKeyDown={handleKeyDown} 
+                  placeholder="Исполнитель — Трек" 
+                  className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-xl sm:text-2xl font-bold px-6 py-5 rounded-3xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors" 
+                />
                 <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4">
-                  <button onClick={goBack} disabled={isSubmitting} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={goBack} disabled={isSubmitting} className="flex-1 border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors">
                     <ArrowLeft className="w-5 h-5" /> Назад
                   </button>
-                  <button onClick={goNext} disabled={!canProceed() || isSubmitting} className="flex-1 bg-[#EB5618] hover:bg-[#1A1A1A] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-lg">
+                  <button onClick={goNext} disabled={!canProceed() || isSubmitting} className="flex-1 bg-[#EB5618] hover:bg-[#1A1A1A] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-4 rounded-3xl flex items-center justify-center gap-2 transition-colors shadow-lg">
                     {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Грузим...</> : <><Sparkles className="w-5 h-5" /> В лотерею</>}
                   </button>
                 </div>
@@ -313,7 +327,7 @@ export default function App() {
             )}
 
             {currentStepId === 'ticket' && ticketNumber && (
-              <motion.section key="ticket" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-[#F4EBE1] pt-10 pb-8 px-6 sm:px-12 rounded-3xl shadow-2xl text-center overflow-hidden flex flex-col items-center">
+              <motion.section key="ticket" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-[#F4EBE1] pt-10 pb-8 px-6 sm:px-12 rounded-[32px] shadow-2xl text-center overflow-hidden flex flex-col items-center">
                 <div className="absolute top-[35%] -left-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#D6C2AD]" />
                 <div className="absolute top-[35%] -right-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#D6C2AD]" />
                 
@@ -324,7 +338,7 @@ export default function App() {
                   <span className="font-display text-[160px] sm:text-[200px] leading-none text-[#EB5618] block drop-shadow-[5px_5px_0px_#1A1A1A]">{ticketNumber}</span>
                 </motion.div>
                 
-                <div className="inline-flex items-center gap-3 bg-[#1A1A1A] px-8 py-4 rounded-2xl rotate-2 mb-6">
+                <div className="inline-flex items-center gap-3 bg-[#1A1A1A] px-8 py-4 rounded-3xl rotate-2 mb-6">
                   <span className="w-4 h-4 rounded-full bg-[#009B4D] animate-pulse" />
                   <span className="font-display text-2xl sm:text-3xl text-[#F9B800] tracking-wide">Заскринь его!</span>
                 </div>
