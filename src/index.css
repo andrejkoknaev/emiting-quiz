@@ -5,47 +5,27 @@
     --bg-craft: #E3CCB0;
     --bg-paper: #FAF3E8;
     --ink: #1A1A1A;
-    --accent-orange: #EB5618;
-    --accent-coral: #F28752;
-    --accent-red: #E32026;
-    --accent-yellow: #F9B800;
-    --accent-green: #009B4D;
-    --accent-slate: #646373;
   }
-
   body {
     font-family: 'Golos Text', sans-serif;
     background-color: var(--bg-craft);
-    color: var(--ink);
     overflow-x: hidden;
   }
 }
 
-.font-display {
-  font-family: 'Dela Gothic One', cursive;
-}
-
-.font-mono-code {
-  font-family: 'JetBrains Mono', monospace;
-}
+.font-display { font-family: 'Dela Gothic One', cursive; }
+.font-mono-code { font-family: 'JetBrains Mono', monospace; }
 
 .craft-noise {
-  background-image: radial-gradient(rgba(26, 26, 26, 0.06) 1px, transparent 0),
-    radial-gradient(rgba(139, 94, 52, 0.08) 1px, transparent 0);
+  background-image: radial-gradient(rgba(26,26,26,0.06) 1px, transparent 0),
+    radial-gradient(rgba(139,94,52,0.08) 1px, transparent 0);
   background-size: 24px 24px;
   background-position: 0 0, 12px 12px;
 }
 
 .torn-top {
-  clip-path: polygon(
-    0% 0%, 100% 0%, 100% 78%, 92% 88%, 84% 72%, 75% 91%, 66% 74%, 55% 86%,
-    44% 68%, 33% 89%, 22% 73%, 11% 85%, 0% 70%
-  );
+  clip-path: polygon(0% 0%, 100% 0%, 100% 78%, 92% 88%, 84% 72%, 75% 91%, 66% 74%, 55% 86%, 44% 68%, 33% 89%, 22% 73%, 11% 85%, 0% 70%);
 }
-
 .torn-bottom {
-  clip-path: polygon(
-    0% 25%, 10% 10%, 21% 28%, 32% 12%, 45% 30%, 57% 11%, 68% 26%, 79% 9%,
-    90% 24%, 100% 14%, 100% 100%, 0% 100%
-  );
+  clip-path: polygon(0% 25%, 10% 10%, 21% 28%, 32% 12%, 45% 30%, 57% 11%, 68% 26%, 79% 9%, 90% 24%, 100% 14%, 100% 100%, 0% 100%);
 }
