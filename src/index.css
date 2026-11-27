@@ -80,3 +80,31 @@
     0% 100%
   );
 }
+
+.ticket-cutout {
+  -webkit-mask-image:
+    radial-gradient(circle 20px at 0% 36%, transparent 19.5px, #000 20.5px),
+    radial-gradient(circle 20px at 100% 36%, transparent 19.5px, #000 20.5px);
+  -webkit-mask-size: 52% 100%, 52% 100%;
+  -webkit-mask-position: left center, right center;
+  -webkit-mask-repeat: no-repeat;
+  mask-image:
+    radial-gradient(circle 20px at 0% 36%, transparent 19.5px, #000 20.5px),
+    radial-gradient(circle 20px at 100% 36%, transparent 19.5px, #000 20.5px);
+  mask-size: 52% 100%, 52% 100%;
+  mask-position: left center, right center;
+  mask-repeat: no-repeat;
+}
+
+@keyframes appFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.app-ready {
+  animation: appFadeIn 180ms ease-out forwards;
+}
