@@ -50,6 +50,13 @@ function readSavedTicket() {
   }
 }
 
+function formatNameInput(rawValue) {
+  return rawValue.replace(
+    /(^|[\s-])([\p{L}])/gu,
+    (_, sep, letter) => sep + letter.toUpperCase(),
+  );
+}
+
 function getTicketNumberSizeClass(ticket) {
   const len = String(ticket).length;
   if (len <= 1) return 'text-[clamp(150px,46vw,240px)]';
@@ -187,6 +194,8 @@ export default function App() {
   const blurResetTimerRef = useRef(null);
   const isSubmittingRef = useRef(false);
   const submitAbortRef = useRef(null);
+  const songAutoDashJustInsertedRef = useRef(false);
+  const songAutoDashDismissedRef = useRef(false);
 
   const includeDepartment = institute === '' || institute === 'ЭМИТ';
   const questionSteps = includeDepartment
@@ -242,6 +251,72 @@ export default function App() {
       }
     };
   }, [cancelAutoAdvance]);
+
+  const handleNameChange = (e) => {
+    const input = e.target;
+    const rawValue = input.value;
+    const formatted = formatNameInput(rawValue);
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+
+    setName(formatted);
+
+    if (formatted !== rawValue && start !== null && end !== null) {
+      const delta = formatted.length - rawValue.length;
+      requestAnimationFrame(() => {
+        if (document.activeElement === input) {
+          try {
+            input.setSelectionRange(start + delta, end + delta);
+          } catch {
+          }
+        }
+      });
+    }
+  };
+
+  const handleSongChange = (e) => {
+    const nextValue = e.target.value;
+    const prevValue = song;
+
+    if (submitError) setSubmitError('');
+
+    if (nextValue.length === 0) {
+      songAutoDashJustInsertedRef.current = false;
+      songAutoDashDismissedRef.current = false;
+      setSong('');
+      return;
+    }
+
+    if (
+      songAutoDashJustInsertedRef.current &&
+      prevValue.endsWith(' — ') &&
+      nextValue === prevValue.slice(0, -1)
+    ) {
+      songAutoDashJustInsertedRef.current = false;
+      songAutoDashDismissedRef.current = true;
+      setSong(`${prevValue.slice(0, -3)} `);
+      return;
+    }
+
+    songAutoDashJustInsertedRef.current = false;
+
+    const isAddingText = nextValue.length > prevValue.length;
+    const isSingleWordFollowedBySpace = /^\s*\S+ $/.test(nextValue);
+    const hasDashAlready = /[—–-]/.test(nextValue);
+
+    if (
+      isAddingText &&
+      !songAutoDashDismissedRef.current &&
+      isSingleWordFollowedBySpace &&
+      !hasDashAlready
+    ) {
+      songAutoDashJustInsertedRef.current = true;
+      setSong(`${nextValue.slice(0, -1)} — `);
+      return;
+    }
+
+    setSong(nextValue);
+  };
 
   const resolvedSource =
     sourceMode === 'custom'
@@ -433,20 +508,20 @@ export default function App() {
             <div
               role="status"
               aria-live="polite"
-              className={`inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-10 py-2.5 sm:px-14 sm:py-3 rounded-full shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
+              className={`inline-flex items-baseline justify-center gap-2 bg-[#F4EBE1] px-10 py-2.5 sm:px-14 sm:py-3 rounded-full shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
                 isInputFocused ? 'mb-3 sm:mb-5' : 'mb-5 sm:mb-6'
               }`}
             >
               <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/60 uppercase tracking-wider leading-none">
                 Вопрос
               </span>
-              <span className="font-mono-code text-base sm:text-lg font-bold text-[#EB5618] leading-none tabular-nums">
+              <span className="font-display text-sm sm:text-base text-[#EB5618] leading-none tabular-nums">
                 {currentStepNumber}
               </span>
               <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/60 uppercase tracking-wider leading-none">
                 из
               </span>
-              <span className="font-mono-code text-base sm:text-lg font-bold text-[#1A1A1A]/70 leading-none tabular-nums">
+              <span className="font-display text-sm sm:text-base text-[#1A1A1A]/75 leading-none tabular-nums">
                 {totalQuestionSteps}
               </span>
             </div>
@@ -468,11 +543,12 @@ export default function App() {
                   <input
                     type="text"
                     autoComplete="name"
+                    autoCapitalize="words"
                     maxLength={120}
                     value={name}
                     onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={handleNameChange}
                     onKeyDown={handleKeyDown}
                     placeholder="Твоё имя и фамилия"
                     className={INPUT_CLASS}
@@ -708,15 +784,13 @@ export default function App() {
                   <h2 className={TITLE_CLASS}>Какая твоя любимая песня?</h2>
                   <input
                     type="text"
+                    autoCapitalize="none"
                     maxLength={140}
                     value={song}
                     disabled={isSubmitting}
                     onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
-                    onChange={(e) => {
-                      setSong(e.target.value);
-                      if (submitError) setSubmitError('');
-                    }}
+                    onChange={handleSongChange}
                     onKeyDown={handleKeyDown}
                     placeholder="Исполнитель — Трек"
                     className={`${INPUT_CLASS} disabled:opacity-60`}
