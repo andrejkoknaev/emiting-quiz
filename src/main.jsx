@@ -33,8 +33,6 @@ async function waitForFonts() {
     document.fonts.load('500 1em "Golos Text"', 'АБВГДабвгд0123456789'),
     document.fonts.load('600 1em "Golos Text"', 'АБВГДабвгд0123456789'),
     document.fonts.load('700 1em "Golos Text"', 'АБВГДабвгд0123456789'),
-    document.fonts.load('600 1em "JetBrains Mono"', '0123456789'),
-    document.fonts.load('700 1em "JetBrains Mono"', '0123456789'),
   ];
 
   const timeout = new Promise((resolve) => setTimeout(resolve, FONT_LOAD_TIMEOUT_MS));
