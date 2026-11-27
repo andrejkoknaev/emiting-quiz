@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Check, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'emiting_ticket';
-const AUTO_ADVANCE_DELAY_MS = 900;
+const AUTO_ADVANCE_DELAY_MS = 750;
+const BLUR_RESET_DELAY_MS = 150;
 const CLIENT_TIMEOUT_MS = 12000;
 
 const COURSES = ['1', '2', '3', '4'];
@@ -40,6 +41,14 @@ function readSavedTicket() {
   } catch {
     return null;
   }
+}
+
+function getTicketNumberSizeClass(ticket) {
+  const len = String(ticket).length;
+  if (len <= 1) return 'text-[clamp(150px,46vw,240px)]';
+  if (len === 2) return 'text-[clamp(128px,39vw,228px)]';
+  if (len === 3) return 'text-[clamp(92px,29vw,204px)]';
+  return 'text-[clamp(68px,21vw,172px)]';
 }
 
 function CollageLogo() {
@@ -96,9 +105,10 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [pendingChoice, setPendingChoice] = useState(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
-  const inputRef = useRef(null);
   const autoAdvanceTimerRef = useRef(null);
+  const blurResetTimerRef = useRef(null);
   const isSubmittingRef = useRef(false);
   const submitAbortRef = useRef(null);
 
@@ -119,28 +129,43 @@ export default function App() {
     setPendingChoice(null);
   }, []);
 
+  const resetInputFocus = useCallback(() => {
+    if (blurResetTimerRef.current !== null) {
+      clearTimeout(blurResetTimerRef.current);
+      blurResetTimerRef.current = null;
+    }
+    setIsInputFocused(false);
+  }, []);
+
+  const handleInputFocus = useCallback(() => {
+    if (blurResetTimerRef.current !== null) {
+      clearTimeout(blurResetTimerRef.current);
+      blurResetTimerRef.current = null;
+    }
+    setIsInputFocused(true);
+  }, []);
+
+  const handleInputBlur = useCallback(() => {
+    if (blurResetTimerRef.current !== null) {
+      clearTimeout(blurResetTimerRef.current);
+    }
+    blurResetTimerRef.current = setTimeout(() => {
+      blurResetTimerRef.current = null;
+      setIsInputFocused(false);
+    }, BLUR_RESET_DELAY_MS);
+  }, []);
+
   useEffect(() => {
     return () => {
       cancelAutoAdvance();
+      if (blurResetTimerRef.current !== null) {
+        clearTimeout(blurResetTimerRef.current);
+      }
       if (submitAbortRef.current) {
         submitAbortRef.current.abort();
       }
     };
   }, [cancelAutoAdvance]);
-
-  useEffect(() => {
-    if (
-      currentStepId === 'name' ||
-      currentStepId === 'song' ||
-      (currentStepId === 'source' && sourceMode === 'custom')
-    ) {
-      const timer = setTimeout(() => {
-        inputRef.current?.focus({ preventScroll: true });
-      }, 260);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [currentStepId, sourceMode]);
 
   const resolvedSource =
     sourceMode === 'custom'
@@ -166,6 +191,7 @@ export default function App() {
     }
 
     cancelAutoAdvance();
+    resetInputFocus();
     setter(value);
 
     if (stepId === 'institute' && value !== 'ЭМИТ') {
@@ -198,6 +224,7 @@ export default function App() {
     if (!canProceedTextStep() || isSubmittingRef.current) return;
 
     cancelAutoAdvance();
+    resetInputFocus();
 
     if (currentStepId === 'song') {
       handleSubmit();
@@ -215,6 +242,7 @@ export default function App() {
     if (isSubmittingRef.current || currentQuestionIndex <= 0) return;
 
     cancelAutoAdvance();
+    resetInputFocus();
     setSubmitError('');
     setDirection(-1);
     setCurrentStepId(questionSteps[currentQuestionIndex - 1]);
@@ -278,9 +306,9 @@ export default function App() {
       try {
         localStorage.setItem(STORAGE_KEY, receivedTicket);
       } catch {
-        // Игнорируем ограничения localStorage в приватном режиме
       }
 
+      resetInputFocus();
       setTicketNumber(receivedTicket);
       setDirection(1);
       setCurrentStepId('ticket');
@@ -301,23 +329,37 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-dvh flex flex-col craft-noise bg-[#D6C2AD]">
+    <div className="app-ready relative min-h-dvh flex flex-col craft-noise bg-[#D6C2AD]">
       <div className="pointer-events-none fixed top-0 left-0 right-0 z-0">
         <div className="h-11 bg-[#F28752] torn-top opacity-90" />
         <div className="h-8 -mt-7 bg-[#EB5618] torn-top" />
       </div>
 
-      <header className="pointer-events-none absolute top-7 sm:top-8 left-0 right-0 z-10 flex justify-center px-4">
+      <header
+        className={`pointer-events-none absolute top-7 sm:top-8 left-0 right-0 z-10 flex justify-center px-4 transition-all duration-300 ease-out ${
+          isInputFocused
+            ? '-translate-y-6 opacity-0 sm:translate-y-0 sm:opacity-100'
+            : 'translate-y-0 opacity-100'
+        }`}
+      >
         <CollageLogo />
       </header>
 
-      <main className="relative z-10 flex-1 w-full flex items-start justify-center pt-[max(15vh,96px)] sm:pt-[max(15vh,118px)] pb-14">
+      <main
+        className={`relative z-10 flex-1 w-full flex items-start justify-center pb-14 transition-[padding-top] duration-300 ease-out ${
+          isInputFocused
+            ? 'pt-11 sm:pt-[max(10vh,96px)]'
+            : 'pt-[max(15vh,96px)] sm:pt-[max(15vh,118px)]'
+        }`}
+      >
         <div className="w-[calc(100%-64px)] max-w-[560px] mx-auto flex flex-col items-center">
           {currentStepId !== 'ticket' && (
             <div
               role="status"
               aria-live="polite"
-              className="mb-5 sm:mb-6 inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-11 py-2.5 sm:px-14 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap shrink-0 select-none"
+              className={`inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-11 py-2.5 sm:px-14 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
+                isInputFocused ? 'mb-3 sm:mb-5' : 'mb-5 sm:mb-6'
+              }`}
             >
               <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/60 uppercase tracking-wider leading-none">
                 Шаг
@@ -351,11 +393,12 @@ export default function App() {
                   </h1>
 
                   <input
-                    ref={inputRef}
                     type="text"
                     autoComplete="name"
                     maxLength={120}
                     value={name}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Твоё имя и фамилия"
@@ -580,10 +623,11 @@ export default function App() {
                           className="overflow-hidden w-full"
                         >
                           <input
-                            ref={inputRef}
                             type="text"
                             maxLength={140}
                             value={customSource}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
                             onChange={(e) => setCustomSource(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Напиши свой вариант..."
@@ -634,11 +678,12 @@ export default function App() {
                   </h2>
 
                   <input
-                    ref={inputRef}
                     type="text"
                     maxLength={140}
                     value={song}
                     disabled={isSubmitting}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
                     onChange={(e) => {
                       setSong(e.target.value);
                       if (submitError) setSubmitError('');
@@ -690,49 +735,43 @@ export default function App() {
               )}
 
               {currentStepId === 'ticket' && ticketNumber && (
-                <motion.section
+                <motion.div
                   key="ticket"
                   initial={{ opacity: 0, scale: 0.94 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="relative bg-[#F4EBE1] pt-10 pb-9 px-6 sm:px-12 rounded-[16px] shadow-2xl border border-[#1A1A1A]/10 text-center overflow-hidden flex flex-col items-center w-full"
+                  className="w-full drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
                 >
-                  <div className="absolute top-[36%] -left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-[#D6C2AD]" />
-                  <div className="absolute top-[36%] -right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-[#D6C2AD]" />
+                  <section className="ticket-cutout relative bg-[#F4EBE1] pt-10 pb-9 px-6 sm:px-12 rounded-[16px] text-center flex flex-col items-center w-full">
+                    <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
+                      Ура! Вы в лотерее!
+                    </h2>
+                    <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
+                      Ваш номер:
+                    </p>
 
-                  <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
-                    Ура! Вы в лотерее!
-                  </h2>
-                  <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
-                    Ваш номер:
-                  </p>
+                    <motion.div
+                      initial={{ scale: 0.6, rotate: -5 }}
+                      animate={{ scale: 1, rotate: -2 }}
+                      transition={{ type: 'spring', damping: 15 }}
+                      className="mt-2 mb-6 sm:mb-8 w-full flex justify-center"
+                    >
+                      <span
+                        className={`font-display ${getTicketNumberSizeClass(ticketNumber)} leading-none tabular-nums whitespace-nowrap text-[#EB5618] block drop-shadow-[6px_6px_0px_#1A1A1A]`}
+                      >
+                        {ticketNumber}
+                      </span>
+                    </motion.div>
 
-                  <motion.div
-                    initial={{ scale: 0.6, rotate: -5 }}
-                    animate={{ scale: 1, rotate: -2 }}
-                    transition={{ type: 'spring', damping: 15 }}
-                    className="my-2 w-full"
-                  >
-                    <span className="font-display text-[clamp(76px,22vw,168px)] leading-none tabular-nums text-[#EB5618] block drop-shadow-[5px_5px_0px_#1A1A1A] break-all">
-                      {ticketNumber}
-                    </span>
-                  </motion.div>
-
-                  <div className="inline-flex items-center gap-3 bg-[#1A1A1A] px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl rotate-2 mb-7">
-                    <span className="w-3.5 h-3.5 rounded-full bg-[#009B4D] animate-pulse shrink-0" />
-                    <span className="font-display text-xl sm:text-3xl text-[#F9B800] tracking-wide whitespace-nowrap">
-                      Заскринь его!
-                    </span>
-                  </div>
-
-                  <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-xl flex flex-col items-center justify-center px-4">
-                    <span className="font-display text-[#1A1A1A]/25 text-lg sm:text-xl">
-                      Место под фото
-                    </span>
-                    <span className="text-[#1A1A1A]/30 text-xs sm:text-sm font-bold mt-1">
-                      (заменим позже)
-                    </span>
-                  </div>
-                </motion.section>
+                    <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-xl flex flex-col items-center justify-center px-4">
+                      <span className="font-display text-[#1A1A1A]/25 text-lg sm:text-xl">
+                        Место под фото
+                      </span>
+                      <span className="text-[#1A1A1A]/30 text-xs sm:text-sm font-bold mt-1">
+                        (заменим позже)
+                      </span>
+                    </div>
+                  </section>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
