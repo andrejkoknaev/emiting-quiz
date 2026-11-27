@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Check, Loader2, AlertCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'emiting_ticket';
 const AUTO_ADVANCE_DELAY_MS = 750;
@@ -81,6 +81,31 @@ function NavArrow({ direction = 'right', className = '' }) {
         strokeWidth="2.35"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function TicketIcon({ className = '' }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={`w-5 h-5 shrink-0 transition-transform duration-200 ease-out group-hover:-rotate-6 group-disabled:rotate-0 ${className}`}
+    >
+      <path
+        d="M3.5 7.5A2 2 0 0 1 5.5 5.5H18.5A2 2 0 0 1 20.5 7.5V9.6A2.4 2.4 0 0 0 20.5 14.4V16.5A2 2 0 0 1 18.5 18.5H5.5A2 2 0 0 1 3.5 16.5V14.4A2.4 2.4 0 0 0 3.5 9.6V7.5Z"
+        stroke="currentColor"
+        strokeWidth="2.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14.5 6V8.5M14.5 11.25V12.75M14.5 15.5V18"
+        stroke="currentColor"
+        strokeWidth="2.15"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -357,7 +382,6 @@ export default function App() {
       try {
         localStorage.setItem(STORAGE_KEY, receivedTicket);
       } catch {
-        // Игнорируем ограничения localStorage в приватном режиме
       }
 
       resetInputFocus();
@@ -382,9 +406,9 @@ export default function App() {
 
   return (
     <div className="app-ready relative min-h-dvh flex flex-col craft-noise bg-[#D6C2AD]">
-      <div className="pointer-events-none fixed top-0 left-0 right-0 z-0">
-        <div className="h-11 bg-[#F28752] torn-top opacity-90" />
-        <div className="h-8 -mt-7 bg-[#EB5618] torn-top" />
+      <div className="pointer-events-none fixed top-0 left-0 right-0 z-0 h-12">
+        <div className="absolute top-0 left-0 right-0 h-12 bg-[#F28752] torn-top-back opacity-95" />
+        <div className="absolute top-0 left-0 right-0 h-8 bg-[#EB5618] torn-top-front" />
       </div>
 
       <header
@@ -400,7 +424,7 @@ export default function App() {
       <main
         className={`relative z-10 flex-1 w-full flex items-start justify-center pb-14 transition-[padding-top] duration-300 ease-out ${
           isInputFocused
-            ? 'pt-11 sm:pt-[max(10vh,96px)]'
+            ? 'pt-12 sm:pt-[max(10vh,96px)]'
             : 'pt-[max(15vh,96px)] sm:pt-[max(15vh,118px)]'
         }`}
       >
@@ -409,7 +433,7 @@ export default function App() {
             <div
               role="status"
               aria-live="polite"
-              className={`inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-10 py-2.5 sm:px-14 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
+              className={`inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-10 py-2.5 sm:px-14 sm:py-3 rounded-full shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
                 isInputFocused ? 'mb-3 sm:mb-5' : 'mb-5 sm:mb-6'
               }`}
             >
@@ -714,7 +738,7 @@ export default function App() {
                       type="button"
                       onClick={goNext}
                       disabled={!canProceedTextStep() || isSubmitting}
-                      className="flex-1 min-h-[54px] bg-[#EB5618] hover:bg-[#1A1A1A] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg cursor-pointer"
+                      className="group flex-1 min-h-[54px] bg-[#EB5618] hover:bg-[#1A1A1A] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2.5 transition-colors shadow-lg cursor-pointer"
                     >
                       {isSubmitting ? (
                         <>
@@ -723,7 +747,7 @@ export default function App() {
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-5 h-5 shrink-0" />
+                          <TicketIcon />
                           <span>В лотерею</span>
                         </>
                       )}
@@ -776,9 +800,9 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="pointer-events-none relative z-0 mt-auto">
-        <div className="h-10 bg-[#F28752] torn-bottom opacity-90" />
-        <div className="h-8 -mt-6 bg-[#EB5618] torn-bottom" />
+      <footer className="pointer-events-none relative z-0 mt-auto h-11 w-full">
+        <div className="absolute bottom-0 left-0 right-0 h-11 bg-[#F28752] torn-bottom-back opacity-95" />
+        <div className="absolute bottom-0 left-0 right-0 h-7 bg-[#EB5618] torn-bottom-front" />
       </footer>
     </div>
   );
