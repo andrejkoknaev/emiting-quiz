@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Check, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Check, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'emiting_ticket';
 const AUTO_ADVANCE_DELAY_MS = 750;
@@ -49,6 +49,34 @@ function getTicketNumberSizeClass(ticket) {
   if (len === 2) return 'text-[clamp(128px,39vw,228px)]';
   if (len === 3) return 'text-[clamp(92px,29vw,204px)]';
   return 'text-[clamp(68px,21vw,172px)]';
+}
+
+function NavArrow({ direction = 'right', className = '' }) {
+  const path =
+    direction === 'right'
+      ? 'M3.75 12H19.75M19.75 12C16.65 12 14.3 9.25 13.75 6.25M19.75 12C16.65 12 14.3 14.75 13.75 17.75'
+      : 'M20.25 12H4.25M4.25 12C7.35 12 9.7 9.25 10.25 6.25M4.25 12C7.35 12 9.7 14.75 10.25 17.75';
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={`w-5 h-5 shrink-0 transition-transform duration-200 ease-out ${
+        direction === 'right'
+          ? 'group-hover:translate-x-1 group-disabled:translate-x-0'
+          : 'group-hover:-translate-x-1 group-disabled:translate-x-0'
+      } ${className}`}
+    >
+      <path
+        d={path}
+        stroke="currentColor"
+        strokeWidth="2.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function CollageLogo() {
@@ -329,7 +357,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-ready relative min-h-dvh flex flex-col craft-noise bg-[#D6C2AD]">
+    <div className="app-ready relative min-h-dvh flex flex-col bg-transparent">
       <div className="pointer-events-none fixed top-0 left-0 right-0 z-0">
         <div className="h-11 bg-[#F28752] torn-top opacity-90" />
         <div className="h-8 -mt-7 bg-[#EB5618] torn-top" />
@@ -357,12 +385,12 @@ export default function App() {
             <div
               role="status"
               aria-live="polite"
-              className={`inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-11 py-2.5 sm:px-14 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
+              className={`inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-10 py-2.5 sm:px-14 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap shrink-0 select-none transition-[margin-bottom] duration-300 ease-out ${
                 isInputFocused ? 'mb-3 sm:mb-5' : 'mb-5 sm:mb-6'
               }`}
             >
               <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/60 uppercase tracking-wider leading-none">
-                Шаг
+                Вопрос
               </span>
               <span className="font-mono-code text-base sm:text-lg font-bold text-[#EB5618] leading-none tabular-nums">
                 {currentStepNumber}
@@ -389,7 +417,7 @@ export default function App() {
                   className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
                 >
                   <h1 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
-                    Как вас зовут?
+                    Как тебя зовут?
                   </h1>
 
                   <input
@@ -410,9 +438,10 @@ export default function App() {
                       type="button"
                       onClick={goNext}
                       disabled={!canProceedTextStep()}
-                      className="w-full min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="group w-full min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      Далее <ArrowRight className="w-5 h-5" />
+                      <span>Далее</span>
+                      <NavArrow direction="right" />
                     </button>
                   </div>
                 </motion.section>
@@ -459,9 +488,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={goBack}
-                      className="w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="group w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <ArrowLeft className="w-5 h-5" /> Назад
+                      <NavArrow direction="left" />
+                      <span>Назад</span>
                     </button>
                   </div>
                 </motion.section>
@@ -509,9 +539,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={goBack}
-                      className="w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="group w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <ArrowLeft className="w-5 h-5" /> Назад
+                      <NavArrow direction="left" />
+                      <span>Назад</span>
                     </button>
                   </div>
                 </motion.section>
@@ -561,9 +592,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={goBack}
-                      className="w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="group w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <ArrowLeft className="w-5 h-5" /> Назад
+                      <NavArrow direction="left" />
+                      <span>Назад</span>
                     </button>
                   </div>
                 </motion.section>
@@ -642,11 +674,12 @@ export default function App() {
                     <button
                       type="button"
                       onClick={goBack}
-                      className={`${
+                      className={`group ${
                         sourceMode === 'custom' ? 'flex-1' : 'w-full sm:w-auto sm:min-w-[160px]'
-                      } min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer`}
+                      } min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer`}
                     >
-                      <ArrowLeft className="w-5 h-5" /> Назад
+                      <NavArrow direction="left" />
+                      <span>Назад</span>
                     </button>
 
                     {sourceMode === 'custom' && (
@@ -654,9 +687,10 @@ export default function App() {
                         type="button"
                         onClick={goNext}
                         disabled={!canProceedTextStep()}
-                        className="flex-1 min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                        className="group flex-1 min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
                       >
-                        Далее <ArrowRight className="w-5 h-5" />
+                        <span>Далее</span>
+                        <NavArrow direction="right" />
                       </button>
                     )}
                   </div>
@@ -708,9 +742,10 @@ export default function App() {
                       type="button"
                       onClick={goBack}
                       disabled={isSubmitting}
-                      className="flex-1 min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-[#1A1A1A] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="group flex-1 min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-[#1A1A1A] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <ArrowLeft className="w-5 h-5" /> Назад
+                      <NavArrow direction="left" />
+                      <span>Назад</span>
                     </button>
                     <button
                       type="button"
