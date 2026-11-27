@@ -5,11 +5,30 @@ import './index.css';
 
 const FONT_LOAD_TIMEOUT_MS = 2000;
 
+function lockMobilePinchZoom() {
+  if (typeof document === 'undefined') return;
+
+  const preventGesture = (e) => {
+    e.preventDefault();
+  };
+
+  const preventMultiTouchZoom = (e) => {
+    if (e.touches && e.touches.length > 1) {
+      e.preventDefault();
+    }
+  };
+
+  document.addEventListener('gesturestart', preventGesture, { passive: false });
+  document.addEventListener('gesturechange', preventGesture, { passive: false });
+  document.addEventListener('gestureend', preventGesture, { passive: false });
+  document.addEventListener('touchmove', preventMultiTouchZoom, { passive: false });
+}
+
 async function waitForFonts() {
   if (typeof document === 'undefined' || !('fonts' in document)) return;
 
   const fontRequests = [
-    document.fonts.load('400 1em "Dela Gothic One"', 'ЭМИТИНГШагКаквасзовут0123456789'),
+    document.fonts.load('400 1em "Dela Gothic One"', 'ЭМИТИНГВопросКактебязовут0123456789'),
     document.fonts.load('400 1em "Golos Text"', 'АБВГДабвгд0123456789'),
     document.fonts.load('500 1em "Golos Text"', 'АБВГДабвгд0123456789'),
     document.fonts.load('600 1em "Golos Text"', 'АБВГДабвгд0123456789'),
@@ -30,6 +49,7 @@ async function waitForFonts() {
 }
 
 async function bootstrap() {
+  lockMobilePinchZoom();
   await waitForFonts();
 
   const rootEl = document.getElementById('root');
