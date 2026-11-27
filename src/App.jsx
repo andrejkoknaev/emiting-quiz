@@ -194,8 +194,6 @@ export default function App() {
   const blurResetTimerRef = useRef(null);
   const isSubmittingRef = useRef(false);
   const submitAbortRef = useRef(null);
-  const songAutoDashJustInsertedRef = useRef(false);
-  const songAutoDashDismissedRef = useRef(false);
 
   const includeDepartment = institute === '' || institute === 'ЭМИТ';
   const questionSteps = includeDepartment
@@ -275,47 +273,8 @@ export default function App() {
   };
 
   const handleSongChange = (e) => {
-    const nextValue = e.target.value;
-    const prevValue = song;
-
+    setSong(e.target.value);
     if (submitError) setSubmitError('');
-
-    if (nextValue.length === 0) {
-      songAutoDashJustInsertedRef.current = false;
-      songAutoDashDismissedRef.current = false;
-      setSong('');
-      return;
-    }
-
-    if (
-      songAutoDashJustInsertedRef.current &&
-      prevValue.endsWith(' — ') &&
-      nextValue === prevValue.slice(0, -1)
-    ) {
-      songAutoDashJustInsertedRef.current = false;
-      songAutoDashDismissedRef.current = true;
-      setSong(`${prevValue.slice(0, -3)} `);
-      return;
-    }
-
-    songAutoDashJustInsertedRef.current = false;
-
-    const isAddingText = nextValue.length > prevValue.length;
-    const isSingleWordFollowedBySpace = /^\s*\S+ $/.test(nextValue);
-    const hasDashAlready = /[—–-]/.test(nextValue);
-
-    if (
-      isAddingText &&
-      !songAutoDashDismissedRef.current &&
-      isSingleWordFollowedBySpace &&
-      !hasDashAlready
-    ) {
-      songAutoDashJustInsertedRef.current = true;
-      setSong(`${nextValue.slice(0, -1)} — `);
-      return;
-    }
-
-    setSong(nextValue);
   };
 
   const resolvedSource =
