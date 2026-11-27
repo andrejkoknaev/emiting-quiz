@@ -16,6 +16,13 @@ const SOURCE_PRESETS = [
   { id: 'custom', label: 'Свой вариант', isCustom: true },
 ];
 
+const CARD_CLASS =
+  'bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full';
+const TITLE_CLASS =
+  'font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left';
+const INPUT_CLASS =
+  'w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-base sm:text-lg font-bold px-4 sm:px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors';
+
 const cardVariants = {
   enter: (dir) => ({ opacity: 0, y: dir > 0 ? 20 : -20, scale: 0.98 }),
   center: {
@@ -76,6 +83,22 @@ function NavArrow({ direction = 'right', className = '' }) {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+function BackButton({ onClick, disabled = false, fullFlex = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group ${
+        fullFlex ? 'flex-1 px-4 sm:px-5' : 'w-full sm:w-auto sm:min-w-[160px] px-6'
+      } min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-[#1A1A1A] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer`}
+    >
+      <NavArrow direction="left" />
+      <span>Назад</span>
+    </button>
   );
 }
 
@@ -334,6 +357,7 @@ export default function App() {
       try {
         localStorage.setItem(STORAGE_KEY, receivedTicket);
       } catch {
+        // Игнорируем ограничения localStorage в приватном режиме
       }
 
       resetInputFocus();
@@ -414,12 +438,9 @@ export default function App() {
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                  className={CARD_CLASS}
                 >
-                  <h1 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
-                    Как тебя зовут?
-                  </h1>
-
+                  <h1 className={TITLE_CLASS}>Как тебя зовут?</h1>
                   <input
                     type="text"
                     autoComplete="name"
@@ -430,9 +451,8 @@ export default function App() {
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Твоё имя и фамилия"
-                    className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-base sm:text-lg font-bold px-4 sm:px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors"
+                    className={INPUT_CLASS}
                   />
-
                   <div className="mt-12 sm:mt-16 flex items-center justify-end w-full">
                     <button
                       type="button"
@@ -455,12 +475,9 @@ export default function App() {
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                  className={CARD_CLASS}
                 >
-                  <h2 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
-                    Какой у тебя курс?
-                  </h2>
-
+                  <h2 className={TITLE_CLASS}>Какой у тебя курс?</h2>
                   <div className="grid grid-cols-2 gap-3 w-full">
                     {COURSES.map((item) => {
                       const isSelected = course === item;
@@ -483,16 +500,8 @@ export default function App() {
                       );
                     })}
                   </div>
-
                   <div className="mt-12 sm:mt-16 flex items-center justify-start w-full">
-                    <button
-                      type="button"
-                      onClick={goBack}
-                      className="group w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
-                    >
-                      <NavArrow direction="left" />
-                      <span>Назад</span>
-                    </button>
+                    <BackButton onClick={goBack} />
                   </div>
                 </motion.section>
               )}
@@ -504,3 +513,273 @@ export default function App() {
                   variants={cardVariants}
                   initial="enter"
                   animate="center"
+                  exit="exit"
+                  className={CARD_CLASS}
+                >
+                  <h2 className={TITLE_CLASS}>Институт?</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
+                    {INSTITUTES.map((item) => {
+                      const isSelected = institute === item;
+                      const isPending =
+                        pendingChoice?.stepId === 'institute' && pendingChoice?.value === item;
+                      const nextStep = item === 'ЭМИТ' ? 'department' : 'source';
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => handleAutoSelect('institute', item, setInstitute, nextStep)}
+                          className={`relative overflow-hidden w-full min-h-[58px] py-3 px-2 sm:py-4 rounded-xl text-center font-display text-sm sm:text-base leading-snug transition-colors cursor-pointer border-2 active:scale-[0.98] ${
+                            isSelected
+                              ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          {item}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-12 sm:mt-16 flex items-center justify-start w-full">
+                    <BackButton onClick={goBack} />
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'department' && (
+                <motion.section
+                  key="department"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className={CARD_CLASS}
+                >
+                  <h2 className={TITLE_CLASS}>Отделение?</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
+                    {DEPARTMENTS.map((item, idx) => {
+                      const isSelected = department === item;
+                      const isPending =
+                        pendingChoice?.stepId === 'department' && pendingChoice?.value === item;
+                      const isLastWide = idx === DEPARTMENTS.length - 1;
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => handleAutoSelect('department', item, setDepartment, 'source')}
+                          className={`relative overflow-hidden w-full min-h-[54px] py-3 px-2 rounded-xl text-center font-display text-sm sm:text-base leading-snug transition-colors cursor-pointer border-2 active:scale-[0.98] ${
+                            isLastWide ? 'col-span-2 sm:col-span-3' : ''
+                          } ${
+                            isSelected
+                              ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          {item}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-12 sm:mt-16 flex items-center justify-start w-full">
+                    <BackButton onClick={goBack} />
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'source' && (
+                <motion.section
+                  key="source"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className={CARD_CLASS}
+                >
+                  <h2 className={TITLE_CLASS}>Откуда ты узнал про нас?</h2>
+                  <div className="flex flex-col gap-3 w-full">
+                    {SOURCE_PRESETS.map((preset) => {
+                      const isSelected = sourceMode === preset.id;
+                      const isPending =
+                        pendingChoice?.stepId === 'source' && pendingChoice?.value === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleSourcePresetClick(preset)}
+                          className={`relative overflow-hidden w-full min-h-[54px] flex items-center justify-between px-4 sm:px-5 py-3.5 rounded-xl text-left font-bold text-sm sm:text-base transition-colors border-2 cursor-pointer active:scale-[0.99] ${
+                            isSelected
+                              ? preset.isCustom
+                                ? 'bg-[#FCD3C1] border-[#EB5618] text-[#1A1A1A]'
+                                : 'bg-[#EB5618] border-[#EB5618] text-[#F4EBE1]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          <span>{preset.label}</span>
+                          {isSelected && (
+                            <Check
+                              className={`w-5 h-5 shrink-0 ${
+                                preset.isCustom ? 'text-[#EB5618]' : 'text-[#F4EBE1]'
+                              }`}
+                            />
+                          )}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+
+                    <AnimatePresence>
+                      {sourceMode === 'custom' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden w-full"
+                        >
+                          <input
+                            type="text"
+                            maxLength={140}
+                            value={customSource}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
+                            onChange={(e) => setCustomSource(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Напиши свой вариант..."
+                            className={`${INPUT_CLASS} mt-1`}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="mt-12 sm:mt-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
+                    <BackButton onClick={goBack} fullFlex={sourceMode === 'custom'} />
+                    {sourceMode === 'custom' && (
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        disabled={!canProceedTextStep()}
+                        className="group flex-1 min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <span>Далее</span>
+                        <NavArrow direction="right" />
+                      </button>
+                    )}
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'song' && (
+                <motion.section
+                  key="song"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className={CARD_CLASS}
+                >
+                  <h2 className={TITLE_CLASS}>Какая твоя любимая песня?</h2>
+                  <input
+                    type="text"
+                    maxLength={140}
+                    value={song}
+                    disabled={isSubmitting}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                    onChange={(e) => {
+                      setSong(e.target.value);
+                      if (submitError) setSubmitError('');
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Исполнитель — Трек"
+                    className={`${INPUT_CLASS} disabled:opacity-60`}
+                  />
+
+                  {submitError && (
+                    <div
+                      role="alert"
+                      className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#E32026]/10 border border-[#E32026]/30 px-4 py-3 text-sm font-semibold text-[#B91C1C]"
+                    >
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                      <span>{submitError}</span>
+                    </div>
+                  )}
+
+                  <div className="mt-12 sm:mt-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
+                    <BackButton onClick={goBack} disabled={isSubmitting} fullFlex />
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      disabled={!canProceedTextStep() || isSubmitting}
+                      className="flex-1 min-h-[54px] bg-[#EB5618] hover:bg-[#1A1A1A] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                          <span>Грузим...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5 shrink-0" />
+                          <span>В лотерею</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'ticket' && ticketNumber && (
+                <motion.div
+                  key="ticket"
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
+                >
+                  <section className="ticket-cutout relative bg-[#F4EBE1] pt-10 pb-9 px-6 sm:px-12 rounded-[16px] text-center flex flex-col items-center w-full">
+                    <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
+                      Ура! Вы в лотерее!
+                    </h2>
+                    <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
+                      Ваш номер:
+                    </p>
+
+                    <motion.div
+                      initial={{ scale: 0.6, rotate: -5 }}
+                      animate={{ scale: 1, rotate: -2 }}
+                      transition={{ type: 'spring', damping: 15 }}
+                      className="mt-2 mb-6 sm:mb-8 w-full flex justify-center"
+                    >
+                      <span
+                        className={`font-display ${getTicketNumberSizeClass(ticketNumber)} leading-none tabular-nums whitespace-nowrap text-[#EB5618] block drop-shadow-[6px_6px_0px_#1A1A1A]`}
+                      >
+                        {ticketNumber}
+                      </span>
+                    </motion.div>
+
+                    <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-xl flex flex-col items-center justify-center px-4">
+                      <span className="font-display text-[#1A1A1A]/25 text-lg sm:text-xl">
+                        Место под фото
+                      </span>
+                      <span className="text-[#1A1A1A]/30 text-xs sm:text-sm font-bold mt-1">
+                        (заменим позже)
+                      </span>
+                    </div>
+                  </section>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </main>
+
+      <footer className="pointer-events-none relative z-0 mt-auto">
+        <div className="h-10 bg-[#F28752] torn-bottom opacity-90" />
+        <div className="h-8 -mt-6 bg-[#EB5618] torn-bottom" />
+      </footer>
+    </div>
+  );
+}
