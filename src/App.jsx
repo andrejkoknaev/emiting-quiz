@@ -1,21 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Check, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+
+const STORAGE_KEY = 'emiting_ticket';
+const AUTO_ADVANCE_DELAY_MS = 900;
+const CLIENT_TIMEOUT_MS = 12000;
 
 const COURSES = ['1', '2', '3', '4'];
 const INSTITUTES = ['ЭМИТ', 'ИОН', 'ИГСУ', 'ИПНБ', 'ИНУП', 'Ресурс России'];
 const DEPARTMENTS = ['ОЭ', 'ОНЭ', 'ОБИ', 'ОПИ', 'ОМЭС', 'ООП', 'IT менеджмент'];
 const SOURCE_PRESETS = [
-  { id: 'friends', label: 'Друзья рассказали' },
-  { id: 'tgk', label: 'Из ТГК' },
-  { id: 'custom', label: 'Свой вариант' },
+  { id: 'friends', label: 'Друзья рассказали', isCustom: false },
+  { id: 'tgk', label: 'Из ТГК', isCustom: false },
+  { id: 'custom', label: 'Свой вариант', isCustom: true },
 ];
 
 const cardVariants = {
-  enter: (dir) => ({ opacity: 0, y: dir > 0 ? 24 : -24, scale: 0.97 }),
-  center: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 350, damping: 28 } },
-  exit: (dir) => ({ opacity: 0, y: dir > 0 ? -24 : 24, scale: 0.97, transition: { duration: 0.15 } }),
+  enter: (dir) => ({ opacity: 0, y: dir > 0 ? 20 : -20, scale: 0.98 }),
+  center: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 360, damping: 30 },
+  },
+  exit: (dir) => ({
+    opacity: 0,
+    y: dir > 0 ? -20 : 20,
+    scale: 0.98,
+    transition: { duration: 0.16 },
+  }),
 };
+
+function readSavedTicket() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw || raw === 'undefined' || raw === 'null') return null;
+    const trimmed = raw.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
 
 function CollageLogo() {
   const letters = [
@@ -27,10 +52,14 @@ function CollageLogo() {
     { char: 'Н', bg: 'bg-[#F4EBE1]', text: 'text-[#1A1A1A]', rot: 'rotate-2' },
     { char: 'Г', bg: 'bg-[#646373]', text: 'text-[#F9B800]', rot: '-rotate-3' },
   ];
+
   return (
-    <div className="inline-flex items-center gap-1.5 select-none">
+    <div className="inline-flex items-center gap-1 sm:gap-1.5 select-none" aria-label="ЭМИТИНГ">
       {letters.map((item, idx) => (
-        <span key={idx} className={`font-serif font-bold inline-flex items-center justify-center w-[48px] h-[56px] sm:w-[72px] sm:h-[84px] text-[36px] sm:text-[58px] shadow-lg shrink-0 ${item.bg} ${item.text} ${item.rot}`}>
+        <span
+          key={idx}
+          className={`font-serif font-bold inline-flex items-center justify-center w-9 h-11 sm:w-14 sm:h-16 text-[24px] sm:text-[42px] shadow-md shrink-0 ${item.bg} ${item.text} ${item.rot}`}
+        >
           {item.char}
         </span>
       ))}
@@ -38,9 +67,24 @@ function CollageLogo() {
   );
 }
 
+function AutoAdvanceBar() {
+  return (
+    <motion.span
+      initial={{ scaleX: 0 }}
+      animate={{ scaleX: 1 }}
+      transition={{ duration: AUTO_ADVANCE_DELAY_MS / 1000, ease: 'linear' }}
+      style={{ transformOrigin: 'left center' }}
+      className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-[#F9B800]"
+    />
+  );
+}
+
 export default function App() {
+  const [initialTicket] = useState(() => readSavedTicket());
+  const [ticketNumber, setTicketNumber] = useState(initialTicket);
+  const [currentStepId, setCurrentStepId] = useState(initialTicket ? 'ticket' : 'name');
   const [direction, setDirection] = useState(1);
-  
+
   const [name, setName] = useState('');
   const [course, setCourse] = useState('');
   const [institute, setInstitute] = useState('');
@@ -50,73 +94,130 @@ export default function App() {
   const [song, setSong] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [ticketNumber, setTicketNumber] = useState(null);
+  const [submitError, setSubmitError] = useState('');
+  const [pendingChoice, setPendingChoice] = useState(null);
+
   const inputRef = useRef(null);
+  const autoAdvanceTimerRef = useRef(null);
+  const isSubmittingRef = useRef(false);
+  const submitAbortRef = useRef(null);
 
-  const activeSteps = [
-    'name',
-    'course',
-    'institute',
-    ...(institute === 'ЭМИТ' ? ['department'] : []),
-    'source',
-    'song',
-    'ticket'
-  ];
-  
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const currentStepId = activeSteps[currentIndex];
+  const includeDepartment = institute === '' || institute === 'ЭМИТ';
+  const questionSteps = includeDepartment
+    ? ['name', 'course', 'institute', 'department', 'source', 'song']
+    : ['name', 'course', 'institute', 'source', 'song'];
 
-  useEffect(() => {
-    try {
-      const savedTicket = localStorage.getItem('emiting_ticket');
-      if (savedTicket && savedTicket !== 'undefined' && savedTicket !== 'null') {
-        setTicketNumber(Number(savedTicket));
-        setCurrentIndex(activeSteps.length - 1);
-      }
-    } catch (e) {
-      console.error("Ошибка чтения localStorage", e);
+  const currentQuestionIndex = questionSteps.indexOf(currentStepId);
+  const currentStepNumber = currentQuestionIndex >= 0 ? currentQuestionIndex + 1 : questionSteps.length;
+  const totalQuestionSteps = questionSteps.length;
+
+  const cancelAutoAdvance = useCallback(() => {
+    if (autoAdvanceTimerRef.current !== null) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
     }
+    setPendingChoice(null);
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 250);
-    return () => clearTimeout(timer);
-  }, [currentIndex, sourceMode]);
+    return () => {
+      cancelAutoAdvance();
+      if (submitAbortRef.current) {
+        submitAbortRef.current.abort();
+      }
+    };
+  }, [cancelAutoAdvance]);
 
-  const resolvedSource = sourceMode === 'custom' ? customSource.trim() : 
-                         sourceMode === 'friends' ? 'Друзья рассказали' : 
-                         sourceMode === 'tgk' ? 'Из ТГК' : '';
+  useEffect(() => {
+    if (
+      currentStepId === 'name' ||
+      currentStepId === 'song' ||
+      (currentStepId === 'source' && sourceMode === 'custom')
+    ) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus({ preventScroll: true });
+      }, 260);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [currentStepId, sourceMode]);
 
-  const canProceed = () => {
-    if (currentStepId === 'name') return name.trim().split(' ').join('').length >= 3;
-    if (currentStepId === 'source') return resolvedSource.length >= 2;
+  const resolvedSource =
+    sourceMode === 'custom'
+      ? customSource.trim()
+      : sourceMode === 'friends'
+        ? 'Друзья рассказали'
+        : sourceMode === 'tgk'
+          ? 'Из ТГК'
+          : '';
+
+  const canProceedTextStep = () => {
+    if (currentStepId === 'name') return name.replace(/\s+/g, '').length >= 3;
+    if (currentStepId === 'source' && sourceMode === 'custom') return customSource.trim().length >= 2;
     if (currentStepId === 'song') return song.trim().length >= 2;
     return false;
   };
 
-  const handleQuickChoice = (setter, value) => {
+  const handleAutoSelect = (stepId, value, setter, nextStepId) => {
+    if (isSubmittingRef.current) return;
+
+    if (pendingChoice && pendingChoice.stepId === stepId && pendingChoice.value === value) {
+      return;
+    }
+
+    cancelAutoAdvance();
     setter(value);
-    setTimeout(() => {
+
+    if (stepId === 'institute' && value !== 'ЭМИТ') {
+      setDepartment('');
+    }
+
+    setPendingChoice({ stepId, value });
+
+    autoAdvanceTimerRef.current = setTimeout(() => {
+      autoAdvanceTimerRef.current = null;
+      setPendingChoice(null);
       setDirection(1);
-      setCurrentIndex((i) => i + 1);
-    }, 150);
+      setCurrentStepId(nextStepId);
+    }, AUTO_ADVANCE_DELAY_MS);
+  };
+
+  const handleSourcePresetClick = (preset) => {
+    if (isSubmittingRef.current) return;
+
+    if (preset.isCustom) {
+      cancelAutoAdvance();
+      setSourceMode(preset.id);
+      return;
+    }
+
+    handleAutoSelect('source', preset.id, setSourceMode, 'song');
   };
 
   const goNext = () => {
-    if (!canProceed() || isSubmitting) return;
-    if (currentStepId !== 'song') {
-      setDirection(1);
-      setCurrentIndex((i) => i + 1);
-    } else {
+    if (!canProceedTextStep() || isSubmittingRef.current) return;
+
+    cancelAutoAdvance();
+
+    if (currentStepId === 'song') {
       handleSubmit();
+      return;
+    }
+
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex < questionSteps.length) {
+      setDirection(1);
+      setCurrentStepId(questionSteps[nextIndex]);
     }
   };
 
   const goBack = () => {
-    if (currentIndex > 0 && !isSubmitting) {
-      setDirection(-1);
-      setCurrentIndex((i) => i - 1);
-    }
+    if (isSubmittingRef.current || currentQuestionIndex <= 0) return;
+
+    cancelAutoAdvance();
+    setSubmitError('');
+    setDirection(-1);
+    setCurrentStepId(questionSteps[currentQuestionIndex - 1]);
   };
 
   const handleKeyDown = (e) => {
@@ -127,228 +228,514 @@ export default function App() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmittingRef.current) return;
+
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
+    setSubmitError('');
+
+    if (submitAbortRef.current) {
+      submitAbortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    submitAbortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
+
     try {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: name.trim(), 
-          course, 
-          institute, 
-          department: institute === 'ЭМИТ' ? department : '', 
-          source: resolvedSource, 
-          song: song.trim() 
+        body: JSON.stringify({
+          name: name.trim(),
+          course,
+          institute,
+          department: institute === 'ЭМИТ' ? department : '',
+          source: resolvedSource,
+          song: song.trim(),
         }),
+        signal: controller.signal,
       });
-      
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error);
 
-      localStorage.setItem('emiting_ticket', String(data.ticketNumber));
-      setTicketNumber(data.ticketNumber);
+      const rawText = await res.text();
+      let data = null;
+
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        throw new Error('Сервер вернул некорректный ответ. Попробуй ещё раз.');
+      }
+
+      if (!res.ok || !data || !data.ok) {
+        throw new Error(data?.error || 'Не удалось сохранить анкету. Попробуй ещё раз.');
+      }
+
+      const receivedTicket = String(data.ticketNumber ?? '').trim();
+      if (!receivedTicket) {
+        throw new Error('Не удалось получить номер билета. Попробуй ещё раз.');
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY, receivedTicket);
+      } catch {
+        // Игнорируем ограничения localStorage в приватном режиме
+      }
+
+      setTicketNumber(receivedTicket);
       setDirection(1);
-      setCurrentIndex(activeSteps.length - 1); 
+      setCurrentStepId('ticket');
     } catch (err) {
-      alert('Ошибка соединения. Попробуй ещё раз.');
+      if (err?.name === 'AbortError') {
+        setSubmitError('Сервер отвечает слишком долго. Проверь интернет и попробуй ещё раз.');
+      } else if (err instanceof TypeError) {
+        setSubmitError('Нет соединения с сервером. Проверь интернет и попробуй ещё раз.');
+      } else {
+        setSubmitError(err?.message || 'Ошибка соединения. Попробуй ещё раз.');
+      }
     } finally {
+      clearTimeout(timeoutId);
+      submitAbortRef.current = null;
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-full flex flex-col craft-noise bg-[#D6C2AD]">
+    <div className="relative min-h-dvh flex flex-col craft-noise bg-[#D6C2AD]">
       <div className="pointer-events-none fixed top-0 left-0 right-0 z-0">
-        <div className="h-12 bg-[#F28752] torn-top opacity-90" />
-        <div className="h-9 -mt-8 bg-[#EB5618] torn-top" />
+        <div className="h-11 bg-[#F28752] torn-top opacity-90" />
+        <div className="h-8 -mt-7 bg-[#EB5618] torn-top" />
       </div>
 
-      <header className="relative z-10 w-full max-w-[520px] mx-auto px-5 sm:px-6 pt-12 pb-2 flex flex-col items-center justify-center gap-6">
+      <header className="pointer-events-none absolute top-7 sm:top-8 left-0 right-0 z-10 flex justify-center px-4">
         <CollageLogo />
-        {currentStepId !== 'ticket' && (
-          <div className="flex items-center justify-center gap-2 sm:gap-3 bg-[#F4EBE1] px-10 py-4 sm:px-12 sm:py-5 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap">
-            <span className="font-display text-sm sm:text-base text-[#1A1A1A]/50 uppercase tracking-widest leading-none translate-y-[1px]">Шаг</span>
-            <span className="font-mono-code text-lg sm:text-xl font-bold text-[#EB5618] leading-none translate-y-[1px]">0{currentIndex + 1}</span>
-            <span className="text-lg sm:text-xl text-[#1A1A1A]/30 leading-none">/</span>
-            <span className="font-mono-code text-lg sm:text-xl font-semibold text-[#1A1A1A]/50 leading-none translate-y-[1px]">0{activeSteps.length - 1}</span>
-          </div>
-        )}
       </header>
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 sm:px-6 py-4 sm:py-6 w-full max-w-[520px] mx-auto">
-        <div className="w-full">
-          <AnimatePresence mode="wait" custom={direction}>
-            {currentStepId === 'name' && (
-              <motion.section key="name" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-8 sm:p-12 rounded-2xl shadow-xl border border-[#1A1A1A]/5 overflow-hidden w-full box-border">
-                <h1 className="font-display text-[28px] sm:text-[34px] leading-tight text-[#1A1A1A] mb-6 sm:mb-8 text-center sm:text-left">Как вас зовут?</h1>
-                
-                <div className="relative">
-                  <input 
-                    ref={inputRef} 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    onKeyDown={handleKeyDown} 
-                    placeholder="Твоё имя и фамилия" 
-                    className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-lg sm:text-xl font-bold px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors box-border" 
+      <main className="relative z-10 flex-1 w-full flex items-start justify-center pt-[max(15vh,96px)] sm:pt-[max(15vh,118px)] pb-14">
+        <div className="w-[calc(100%-64px)] max-w-[560px] mx-auto flex flex-col items-center">
+          {currentStepId !== 'ticket' && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mb-5 sm:mb-6 inline-flex items-center justify-center gap-2 bg-[#F4EBE1] px-11 py-2.5 sm:px-14 sm:py-3 rounded-full border-2 border-[#1A1A1A]/15 shadow-sm whitespace-nowrap shrink-0 select-none"
+            >
+              <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/60 uppercase tracking-wider leading-none">
+                Шаг
+              </span>
+              <span className="font-mono-code text-base sm:text-lg font-bold text-[#EB5618] leading-none tabular-nums">
+                {currentStepNumber}
+              </span>
+              <span className="font-display text-xs sm:text-sm text-[#1A1A1A]/60 uppercase tracking-wider leading-none">
+                из
+              </span>
+              <span className="font-mono-code text-base sm:text-lg font-bold text-[#1A1A1A]/70 leading-none tabular-nums">
+                {totalQuestionSteps}
+              </span>
+            </div>
+          )}
+
+          <div className="w-full">
+            <AnimatePresence mode="wait" custom={direction}>
+              {currentStepId === 'name' && (
+                <motion.section
+                  key="name"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                >
+                  <h1 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
+                    Как вас зовут?
+                  </h1>
+
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    autoComplete="name"
+                    maxLength={120}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Твоё имя и фамилия"
+                    className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-base sm:text-lg font-bold px-4 sm:px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors"
                   />
-                </div>
-                
-                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4 w-full">
-                  <button onClick={goNext} disabled={!canProceed()} className="w-full bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    Дальше <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.section>
-            )}
 
-            {currentStepId === 'course' && (
-              <motion.section key="course" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-8 sm:p-12 rounded-2xl shadow-xl border border-[#1A1A1A]/5 overflow-hidden w-full box-border">
-                <h2 className="font-display text-[28px] sm:text-[34px] leading-tight text-[#1A1A1A] mb-6 sm:mb-8 text-center sm:text-left">Какой у тебя курс?</h2>
-                <div className="grid grid-cols-2 gap-3 w-full">
-                  {COURSES.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setCourse, item)} className={`w-full py-4 sm:py-5 rounded-xl font-display text-2xl sm:text-3xl transition-colors cursor-pointer border-2 box-border ${course === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
-                      {item}
+                  <div className="mt-12 sm:mt-16 flex items-center justify-end w-full">
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      disabled={!canProceedTextStep()}
+                      className="w-full min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      Далее <ArrowRight className="w-5 h-5" />
                     </button>
-                  ))}
-                </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4 w-full">
-                  <button onClick={goBack} className="flex-1 w-full border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    <ArrowLeft className="w-5 h-5" /> Назад
-                  </button>
-                  <button disabled className="flex-1 w-full bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-4 rounded-xl flex items-center justify-center gap-2 box-border">
-                    Дальше <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.section>
-            )}
+                  </div>
+                </motion.section>
+              )}
 
-            {currentStepId === 'institute' && (
-              <motion.section key="institute" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-8 sm:p-12 rounded-2xl shadow-xl border border-[#1A1A1A]/5 overflow-hidden w-full box-border">
-                <h2 className="font-display text-[28px] sm:text-[34px] leading-tight text-[#1A1A1A] mb-6 sm:mb-8 text-center sm:text-left">Институт?</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
-                  {INSTITUTES.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setInstitute, item)} className={`w-full py-3 px-2 sm:py-4 rounded-xl text-center font-display text-base sm:text-lg transition-colors cursor-pointer border-2 box-border ${institute === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
-                      {item}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4 w-full">
-                  <button onClick={goBack} className="flex-1 w-full border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    <ArrowLeft className="w-5 h-5" /> Назад
-                  </button>
-                  <button disabled className="flex-1 w-full bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-4 rounded-xl flex items-center justify-center gap-2 box-border">
-                    Дальше <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.section>
-            )}
+              {currentStepId === 'course' && (
+                <motion.section
+                  key="course"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                >
+                  <h2 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
+                    Какой у тебя курс?
+                  </h2>
 
-            {currentStepId === 'department' && (
-              <motion.section key="department" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-8 sm:p-12 rounded-2xl shadow-xl border border-[#1A1A1A]/5 overflow-hidden w-full box-border">
-                <h2 className="font-display text-[28px] sm:text-[34px] leading-tight text-[#1A1A1A] mb-6 sm:mb-8 text-center sm:text-left">Отделение?</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
-                  {DEPARTMENTS.map(item => (
-                    <button key={item} onClick={() => handleQuickChoice(setDepartment, item)} className={`w-full py-3 px-1 rounded-xl text-center font-display text-xs sm:text-base transition-colors cursor-pointer border-2 box-border ${department === item ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
-                      {item}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4 w-full">
-                  <button onClick={goBack} className="flex-1 w-full border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    <ArrowLeft className="w-5 h-5" /> Назад
-                  </button>
-                  <button disabled className="flex-1 w-full bg-[#1A1A1A]/20 text-[#1A1A1A]/40 font-bold py-4 rounded-xl flex items-center justify-center gap-2 box-border">
-                    Дальше <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.section>
-            )}
+                  <div className="grid grid-cols-2 gap-3 w-full">
+                    {COURSES.map((item) => {
+                      const isSelected = course === item;
+                      const isPending =
+                        pendingChoice?.stepId === 'course' && pendingChoice?.value === item;
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => handleAutoSelect('course', item, setCourse, 'institute')}
+                          className={`relative overflow-hidden w-full min-h-[64px] py-4 sm:py-5 rounded-xl font-display text-2xl sm:text-3xl transition-colors cursor-pointer border-2 active:scale-[0.98] ${
+                            isSelected
+                              ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          {item}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-            {currentStepId === 'source' && (
-              <motion.section key="source" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-8 sm:p-12 rounded-2xl shadow-xl border border-[#1A1A1A]/5 overflow-hidden w-full box-border">
-                <h2 className="font-display text-[28px] sm:text-[34px] leading-tight text-[#1A1A1A] mb-6 sm:mb-8 text-center sm:text-left">Откуда ты узнал про нас?</h2>
-                <div className="flex flex-col gap-3 w-full">
-                  {SOURCE_PRESETS.map(preset => (
-                    <button key={preset.id} onClick={() => setSourceMode(preset.id)} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl text-left font-bold text-sm sm:text-base transition-colors border-2 box-border ${sourceMode === preset.id ? 'bg-[#FCD3C1] border-[#EB5618] text-[#1A1A1A]' : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/30 text-[#1A1A1A]'}`}>
-                      {preset.label}
-                      {sourceMode === preset.id && <Check className="w-5 h-5 text-[#EB5618] shrink-0" />}
+                  <div className="mt-12 sm:mt-16 flex items-center justify-start w-full">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      className="w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Назад
                     </button>
-                  ))}
-                  <AnimatePresence>
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'institute' && (
+                <motion.section
+                  key="institute"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                >
+                  <h2 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
+                    Институт?
+                  </h2>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
+                    {INSTITUTES.map((item) => {
+                      const isSelected = institute === item;
+                      const isPending =
+                        pendingChoice?.stepId === 'institute' && pendingChoice?.value === item;
+                      const nextStep = item === 'ЭМИТ' ? 'department' : 'source';
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => handleAutoSelect('institute', item, setInstitute, nextStep)}
+                          className={`relative overflow-hidden w-full min-h-[58px] py-3 px-2 sm:py-4 rounded-xl text-center font-display text-sm sm:text-base leading-snug transition-colors cursor-pointer border-2 active:scale-[0.98] ${
+                            isSelected
+                              ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          {item}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-12 sm:mt-16 flex items-center justify-start w-full">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      className="w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Назад
+                    </button>
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'department' && (
+                <motion.section
+                  key="department"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                >
+                  <h2 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
+                    Отделение?
+                  </h2>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
+                    {DEPARTMENTS.map((item, idx) => {
+                      const isSelected = department === item;
+                      const isPending =
+                        pendingChoice?.stepId === 'department' && pendingChoice?.value === item;
+                      const isLastWide = idx === DEPARTMENTS.length - 1;
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => handleAutoSelect('department', item, setDepartment, 'source')}
+                          className={`relative overflow-hidden w-full min-h-[54px] py-3 px-2 rounded-xl text-center font-display text-sm sm:text-base leading-snug transition-colors cursor-pointer border-2 active:scale-[0.98] ${
+                            isLastWide ? 'col-span-2 sm:col-span-3' : ''
+                          } ${
+                            isSelected
+                              ? 'bg-[#EB5618] text-[#F4EBE1] border-[#EB5618]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          {item}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-12 sm:mt-16 flex items-center justify-start w-full">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      className="w-full sm:w-auto sm:min-w-[160px] min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Назад
+                    </button>
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'source' && (
+                <motion.section
+                  key="source"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                >
+                  <h2 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
+                    Откуда ты узнал про нас?
+                  </h2>
+
+                  <div className="flex flex-col gap-3 w-full">
+                    {SOURCE_PRESETS.map((preset) => {
+                      const isSelected = sourceMode === preset.id;
+                      const isPending =
+                        pendingChoice?.stepId === 'source' && pendingChoice?.value === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleSourcePresetClick(preset)}
+                          className={`relative overflow-hidden w-full min-h-[54px] flex items-center justify-between px-4 sm:px-5 py-3.5 rounded-xl text-left font-bold text-sm sm:text-base transition-colors border-2 cursor-pointer active:scale-[0.99] ${
+                            isSelected
+                              ? preset.isCustom
+                                ? 'bg-[#FCD3C1] border-[#EB5618] text-[#1A1A1A]'
+                                : 'bg-[#EB5618] border-[#EB5618] text-[#F4EBE1]'
+                              : 'bg-[#F4EBE1] border-[#1A1A1A]/15 hover:border-[#1A1A1A]/35 text-[#1A1A1A]'
+                          }`}
+                        >
+                          <span>{preset.label}</span>
+                          {isSelected && (
+                            <Check
+                              className={`w-5 h-5 shrink-0 ${
+                                preset.isCustom ? 'text-[#EB5618]' : 'text-[#F4EBE1]'
+                              }`}
+                            />
+                          )}
+                          {isPending && <AutoAdvanceBar />}
+                        </button>
+                      );
+                    })}
+
+                    <AnimatePresence>
+                      {sourceMode === 'custom' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden w-full"
+                        >
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            maxLength={140}
+                            value={customSource}
+                            onChange={(e) => setCustomSource(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Напиши свой вариант..."
+                            className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-base sm:text-lg font-bold px-4 sm:px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors mt-1"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="mt-12 sm:mt-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      className={`${
+                        sourceMode === 'custom' ? 'flex-1' : 'w-full sm:w-auto sm:min-w-[160px]'
+                      } min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] text-[#1A1A1A] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer`}
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Назад
+                    </button>
+
                     {sourceMode === 'custom' && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden w-full">
-                        <input 
-                          ref={inputRef} 
-                          type="text" 
-                          value={customSource} 
-                          onChange={(e) => setCustomSource(e.target.value)} 
-                          onKeyDown={handleKeyDown} 
-                          placeholder="Напиши свой вариант..." 
-                          className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-base sm:text-lg font-bold px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors mt-2 box-border" 
-                        />
-                      </motion.div>
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        disabled={!canProceedTextStep()}
+                        className="flex-1 min-h-[54px] bg-[#1A1A1A] hover:bg-[#EB5618] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      >
+                        Далее <ArrowRight className="w-5 h-5" />
+                      </button>
                     )}
-                  </AnimatePresence>
-                </div>
-                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4 w-full">
-                  <button onClick={goBack} className="flex-1 w-full border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    <ArrowLeft className="w-5 h-5" /> Назад
-                  </button>
-                  <button onClick={goNext} disabled={!canProceed()} className="flex-1 w-full bg-[#1A1A1A] hover:bg-[#EB5618] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    Дальше <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.section>
-            )}
+                  </div>
+                </motion.section>
+              )}
 
-            {currentStepId === 'song' && (
-              <motion.section key="song" custom={direction} variants={cardVariants} initial="enter" animate="center" exit="exit" className="bg-[#F4EBE1] p-8 sm:p-12 rounded-2xl shadow-xl border border-[#1A1A1A]/5 overflow-hidden w-full box-border">
-                <h2 className="font-display text-[28px] sm:text-[34px] leading-tight text-[#1A1A1A] mb-6 sm:mb-8 text-center sm:text-left">Какая твоя любимая песня?</h2>
-                <input 
-                  ref={inputRef} 
-                  type="text" 
-                  value={song} 
-                  onChange={(e) => setSong(e.target.value)} 
-                  onKeyDown={handleKeyDown} 
-                  placeholder="Исполнитель — Трек" 
-                  className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-lg sm:text-xl font-bold px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] transition-colors box-border" 
-                />
-                <div className="mt-8 sm:mt-10 flex items-center justify-between gap-3 sm:gap-4 w-full">
-                  <button onClick={goBack} disabled={isSubmitting} className="flex-1 w-full border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 text-[#1A1A1A] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors box-border">
-                    <ArrowLeft className="w-5 h-5" /> Назад
-                  </button>
-                  <button onClick={goNext} disabled={!canProceed() || isSubmitting} className="flex-1 w-full bg-[#EB5618] hover:bg-[#1A1A1A] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 text-[#F4EBE1] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg box-border">
-                    {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Грузим...</> : <><Sparkles className="w-5 h-5" /> В лотерею</>}
-                  </button>
-                </div>
-              </motion.section>
-            )}
+              {currentStepId === 'song' && (
+                <motion.section
+                  key="song"
+                  custom={direction}
+                  variants={cardVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="bg-[#F4EBE1] p-6 sm:p-10 rounded-[16px] shadow-xl border border-[#1A1A1A]/10 overflow-hidden w-full"
+                >
+                  <h2 className="font-display text-[24px] sm:text-[32px] leading-tight text-[#1A1A1A] mb-6 sm:mb-7 text-center sm:text-left">
+                    Какая твоя любимая песня?
+                  </h2>
 
-            {currentStepId === 'ticket' && ticketNumber && (
-              <motion.section key="ticket" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-[#F4EBE1] pt-12 pb-10 px-8 sm:px-14 rounded-2xl shadow-2xl text-center overflow-hidden flex flex-col items-center w-full box-border">
-                <div className="absolute top-[35%] -left-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#D6C2AD]" />
-                <div className="absolute top-[35%] -right-6 -translate-y-1/2 w-12 h-12 rounded-full bg-[#D6C2AD]" />
-                
-                <h2 className="font-display text-4xl sm:text-5xl text-[#1A1A1A] mb-1 sm:mb-2 leading-tight">Ура! Вы в лотерее!</h2>
-                <p className="font-display text-xl sm:text-3xl uppercase tracking-widest text-[#1A1A1A]/60">Ваш номер:</p>
-                
-                <motion.div initial={{ scale: 0.5, rotate: -5 }} animate={{ scale: 1, rotate: -2 }} transition={{ type: 'spring', damping: 15 }} className="mt-1 mb-2">
-                  <span className="font-display text-[160px] sm:text-[200px] leading-none text-[#EB5618] block drop-shadow-[5px_5px_0px_#1A1A1A]">{ticketNumber}</span>
-                </motion.div>
-                
-                <div className="inline-flex items-center gap-3 bg-[#1A1A1A] px-8 py-4 rounded-xl rotate-2 mb-8">
-                  <span className="w-4 h-4 rounded-full bg-[#009B4D] animate-pulse" />
-                  <span className="font-display text-2xl sm:text-3xl text-[#F9B800] tracking-wide">Заскринь его!</span>
-                </div>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    maxLength={140}
+                    value={song}
+                    disabled={isSubmitting}
+                    onChange={(e) => {
+                      setSong(e.target.value);
+                      if (submitError) setSubmitError('');
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Исполнитель — Трек"
+                    className="w-full bg-[#F4EBE1] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 text-base sm:text-lg font-bold px-4 sm:px-5 py-4 rounded-xl outline-none border-2 border-[#1A1A1A]/15 focus:border-[#EB5618] disabled:opacity-60 transition-colors"
+                  />
 
-                <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-xl flex flex-col items-center justify-center box-border">
-                  <span className="font-display text-[#1A1A1A]/25 text-xl">Место под фото</span>
-                  <span className="text-[#1A1A1A]/30 text-sm font-bold mt-1">(заменим позже)</span>
-                </div>
-              </motion.section>
-            )}
-          </AnimatePresence>
+                  {submitError && (
+                    <div
+                      role="alert"
+                      className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#E32026]/10 border border-[#E32026]/30 px-4 py-3 text-sm font-semibold text-[#B91C1C]"
+                    >
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                      <span>{submitError}</span>
+                    </div>
+                  )}
+
+                  <div className="mt-12 sm:mt-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      disabled={isSubmitting}
+                      className="flex-1 min-h-[54px] border-2 border-[#1A1A1A]/20 hover:bg-[#1A1A1A]/10 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-[#1A1A1A] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Назад
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      disabled={!canProceedTextStep() || isSubmitting}
+                      className="flex-1 min-h-[54px] bg-[#EB5618] hover:bg-[#1A1A1A] active:scale-[0.99] disabled:bg-[#1A1A1A]/20 disabled:text-[#1A1A1A]/40 disabled:cursor-not-allowed text-[#F4EBE1] font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                          <span>Грузим...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5 shrink-0" />
+                          <span>В лотерею</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.section>
+              )}
+
+              {currentStepId === 'ticket' && ticketNumber && (
+                <motion.section
+                  key="ticket"
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative bg-[#F4EBE1] pt-10 pb-9 px-6 sm:px-12 rounded-[16px] shadow-2xl border border-[#1A1A1A]/10 text-center overflow-hidden flex flex-col items-center w-full"
+                >
+                  <div className="absolute top-[36%] -left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-[#D6C2AD]" />
+                  <div className="absolute top-[36%] -right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-[#D6C2AD]" />
+
+                  <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
+                    Ура! Вы в лотерее!
+                  </h2>
+                  <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
+                    Ваш номер:
+                  </p>
+
+                  <motion.div
+                    initial={{ scale: 0.6, rotate: -5 }}
+                    animate={{ scale: 1, rotate: -2 }}
+                    transition={{ type: 'spring', damping: 15 }}
+                    className="my-2 w-full"
+                  >
+                    <span className="font-display text-[clamp(76px,22vw,168px)] leading-none tabular-nums text-[#EB5618] block drop-shadow-[5px_5px_0px_#1A1A1A] break-all">
+                      {ticketNumber}
+                    </span>
+                  </motion.div>
+
+                  <div className="inline-flex items-center gap-3 bg-[#1A1A1A] px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl rotate-2 mb-7">
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#009B4D] animate-pulse shrink-0" />
+                    <span className="font-display text-xl sm:text-3xl text-[#F9B800] tracking-wide whitespace-nowrap">
+                      Заскринь его!
+                    </span>
+                  </div>
+
+                  <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-xl flex flex-col items-center justify-center px-4">
+                    <span className="font-display text-[#1A1A1A]/25 text-lg sm:text-xl">
+                      Место под фото
+                    </span>
+                    <span className="text-[#1A1A1A]/30 text-xs sm:text-sm font-bold mt-1">
+                      (заменим позже)
+                    </span>
+                  </div>
+                </motion.section>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </main>
 
