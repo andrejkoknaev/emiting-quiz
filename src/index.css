@@ -35,10 +35,6 @@
   font-family: 'Dela Gothic One', cursive;
 }
 
-.font-mono-code {
-  font-family: 'JetBrains Mono', monospace;
-}
-
 .craft-noise {
   background-image:
     radial-gradient(rgba(26, 26, 26, 0.25) 1px, transparent 0),
