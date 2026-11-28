@@ -974,7 +974,7 @@ export default function App() {
                   <section className="ticket-cutout relative bg-[#F4EBE1] pb-8 sm:pb-10 rounded-[16px] overflow-hidden text-center flex flex-col items-center w-full">
                     <div className="relative z-10 w-full pt-6 sm:pt-9 px-6 sm:px-12 flex flex-col items-center">
                       <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
-                        Ура! Вы в лотерее!
+                        Ура! Вы в розыгрыше!
                       </h2>
                       <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
                         Ваш номер:
