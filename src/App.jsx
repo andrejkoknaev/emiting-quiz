@@ -195,23 +195,84 @@ function BackButton({ onClick, disabled = false, fullFlex = false }) {
 
 function CollageLogo() {
   const letters = [
-    { char: 'Э', bg: 'bg-[#646373]', text: 'text-[#F4EBE1]', rot: '-rotate-3' },
-    { char: 'М', bg: 'bg-[#F4EBE1]', text: 'text-[#E32026]', rot: 'rotate-2' },
-    { char: 'И', bg: 'bg-[#F4EBE1]', text: 'text-[#1A1A1A]', rot: '-rotate-2' },
-    { char: 'Т', bg: 'bg-[#1A1A1A]', text: 'text-[#F4EBE1]', rot: 'rotate-3' },
-    { char: 'И', bg: 'bg-[#E32026]', text: 'text-[#F4EBE1]', rot: '-rotate-1' },
-    { char: 'Н', bg: 'bg-[#F4EBE1]', text: 'text-[#1A1A1A]', rot: 'rotate-2' },
-    { char: 'Г', bg: 'bg-[#646373]', text: 'text-[#F9B800]', rot: '-rotate-3' },
+    {
+      char: 'Э',
+      bg: 'bg-[#646373]',
+      text: 'text-[#F4EBE1]',
+      size: 'w-[42px] h-[44px] sm:w-[58px] sm:h-[62px] text-[24px] sm:text-[36px]',
+      pos: '-rotate-[8deg] translate-y-[6px] sm:translate-y-[9px]',
+      overlap: '',
+      z: 'z-10',
+    },
+    {
+      char: 'М',
+      bg: 'bg-[#F4EBE1]',
+      text: 'text-[#E51D78]',
+      size: 'w-[45px] h-[43px] sm:w-[64px] sm:h-[60px] text-[23px] sm:text-[35px]',
+      pos: 'rotate-[2deg] -translate-y-[1px] sm:-translate-y-[2px]',
+      overlap: '-ml-[5px] sm:-ml-[7px]',
+      z: 'z-20',
+    },
+    {
+      char: 'И',
+      bg: 'bg-[#E32026]',
+      text: 'text-[#F4EBE1]',
+      size: 'w-[40px] h-[44px] sm:w-[56px] sm:h-[62px] text-[24px] sm:text-[36px]',
+      pos: 'rotate-[8deg] translate-y-[2px] sm:translate-y-[4px]',
+      overlap: '-ml-[4px] sm:-ml-[6px]',
+      z: 'z-30',
+    },
+    {
+      char: 'Т',
+      bg: 'bg-[#F4EBE1]',
+      text: 'text-[#1A1A1A]',
+      size: 'w-[45px] h-[48px] sm:w-[64px] sm:h-[68px] text-[27px] sm:text-[40px]',
+      pos: '-rotate-[1deg] -translate-y-[4px] sm:-translate-y-[6px]',
+      overlap: '-ml-[5px] sm:-ml-[7px]',
+      z: 'z-20',
+    },
+    {
+      char: 'И',
+      bg: 'bg-[#646373]',
+      text: 'text-[#F4EBE1]',
+      size: 'w-[44px] h-[43px] sm:w-[62px] sm:h-[60px] text-[23px] sm:text-[34px]',
+      pos: 'rotate-[6deg] translate-y-[4px] sm:translate-y-[6px]',
+      overlap: '-ml-[5px] sm:-ml-[7px]',
+      z: 'z-10',
+    },
+    {
+      char: 'Н',
+      bg: 'bg-[#E32026]',
+      text: 'text-[#F4EBE1]',
+      size: 'w-[42px] h-[46px] sm:w-[60px] sm:h-[64px] text-[25px] sm:text-[38px]',
+      pos: 'rotate-[5deg] -translate-y-[1px] sm:-translate-y-[2px]',
+      overlap: '-ml-[5px] sm:-ml-[7px]',
+      z: 'z-30',
+    },
+    {
+      char: 'Г',
+      bg: 'bg-[#646373]',
+      text: 'text-[#F9B800]',
+      size: 'w-[42px] h-[44px] sm:w-[60px] sm:h-[62px] text-[25px] sm:text-[38px]',
+      pos: 'rotate-[11deg] translate-y-[6px] sm:translate-y-[9px]',
+      overlap: '-ml-[5px] sm:-ml-[7px]',
+      z: 'z-10',
+    },
   ];
 
   return (
-    <div className="inline-flex items-center gap-1 sm:gap-1.5 select-none" aria-label="ЭМИТИНГ">
+    <div
+      role="img"
+      aria-label="ЭМИТИНГ"
+      className="inline-flex items-center isolate select-none"
+    >
       {letters.map((item, idx) => (
         <span
           key={idx}
-          className={`font-serif font-bold inline-flex items-center justify-center w-9 h-11 sm:w-14 sm:h-16 text-[24px] sm:text-[42px] shadow-md shrink-0 ${item.bg} ${item.text} ${item.rot}`}
+          aria-hidden="true"
+          className={`relative font-display leading-none inline-flex items-center justify-center shrink-0 shadow-[0_3px_8px_rgba(26,26,26,0.22)] ${item.bg} ${item.text} ${item.size} ${item.pos} ${item.overlap} ${item.z}`}
         >
-          {item.char}
+          <span className="-translate-y-[0.06em]">{item.char}</span>
         </span>
       ))}
     </div>
