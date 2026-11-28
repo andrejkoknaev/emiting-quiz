@@ -296,43 +296,46 @@ function TicketPhoto() {
   };
 
   return (
-    <div className="relative z-0 w-full -mt-5 sm:-mt-9 aspect-[4/3] overflow-hidden bg-[#F4EBE1] select-none">
-      {status === 'loading' && (
+    <div className="relative z-0 w-full -mt-1 sm:-mt-3 px-2 sm:px-3">
+      <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden isolate bg-[#F4EBE1] select-none">
+        {status === 'loading' && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[#E8DDD0] animate-pulse"
+          />
+        )}
+
+        {status === 'error' ? (
+          <div className="w-full h-full flex items-center justify-center px-6 bg-[#EADFD2]/60 text-center">
+            <span className="font-display text-lg sm:text-xl text-[#EB5618]">
+              Заскринь свой номер!
+            </span>
+          </div>
+        ) : (
+          <img
+            key={attempt}
+            ref={imgRef}
+            src={ticketPhoto}
+            alt="Заскринь свой номер билета"
+            width={800}
+            height={600}
+            loading="eager"
+            decoding="async"
+            draggable={false}
+            onLoad={handleLoad}
+            onError={handleError}
+            style={{ transform: 'scale(1.14)', transformOrigin: '32% 100%' }}
+            className={`w-full h-full object-cover object-bottom block select-none pointer-events-none transition-opacity duration-200 ${
+              status === 'loaded' ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        )}
+
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[#E8DDD0] animate-pulse"
+          className="pointer-events-none absolute inset-x-0 top-0 h-3 sm:h-5 bg-gradient-to-b from-[#F4EBE1] to-transparent"
         />
-      )}
-
-      {status === 'error' ? (
-        <div className="w-full h-full flex items-center justify-center px-6 bg-[#EADFD2]/60 text-center">
-          <span className="font-display text-lg sm:text-xl text-[#EB5618]">
-            Заскринь свой номер!
-          </span>
-        </div>
-      ) : (
-        <img
-          key={attempt}
-          ref={imgRef}
-          src={ticketPhoto}
-          alt="Заскринь свой номер билета"
-          width={800}
-          height={600}
-          loading="eager"
-          decoding="async"
-          draggable={false}
-          onLoad={handleLoad}
-          onError={handleError}
-          className={`w-full h-full object-cover object-bottom block select-none pointer-events-none transition-opacity duration-200 ${
-            status === 'loaded' ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      )}
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-7 sm:h-10 bg-gradient-to-b from-[#F4EBE1] to-transparent"
-      />
+      </div>
     </div>
   );
 }
@@ -964,10 +967,10 @@ export default function App() {
                   key="ticket"
                   initial={{ opacity: 0, scale: 0.94 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="w-auto -mx-4 sm:mx-0 drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
+                  className="w-auto -mx-5 sm:-mx-6 drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
                 >
-                  <section className="ticket-cutout relative bg-[#F4EBE1] rounded-[16px] overflow-hidden text-center flex flex-col items-center w-full">
-                    <div className="relative z-10 w-full pt-7 sm:pt-9 px-6 sm:px-12 flex flex-col items-center">
+                  <section className="ticket-cutout relative bg-[#F4EBE1] pb-4 sm:pb-6 rounded-[16px] overflow-hidden text-center flex flex-col items-center w-full">
+                    <div className="relative z-10 w-full pt-6 sm:pt-9 px-6 sm:px-12 flex flex-col items-center">
                       <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
                         Ура! Вы в лотерее!
                       </h2>
