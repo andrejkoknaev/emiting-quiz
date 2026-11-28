@@ -296,7 +296,7 @@ function TicketPhoto() {
   };
 
   return (
-    <div className="relative w-full max-w-[280px] sm:max-w-[340px] aspect-[4/3] rounded-xl overflow-hidden bg-[#F4EBE1] select-none">
+    <div className="relative z-0 w-full -mt-5 sm:-mt-9 aspect-[4/3] overflow-hidden bg-[#F4EBE1] select-none">
       {status === 'loading' && (
         <div
           aria-hidden="true"
@@ -305,8 +305,8 @@ function TicketPhoto() {
       )}
 
       {status === 'error' ? (
-        <div className="w-full h-full flex items-center justify-center px-4 bg-[#EADFD2]/60 text-center">
-          <span className="font-display text-base sm:text-lg text-[#EB5618]">
+        <div className="w-full h-full flex items-center justify-center px-6 bg-[#EADFD2]/60 text-center">
+          <span className="font-display text-lg sm:text-xl text-[#EB5618]">
             Заскринь свой номер!
           </span>
         </div>
@@ -323,11 +323,16 @@ function TicketPhoto() {
           draggable={false}
           onLoad={handleLoad}
           onError={handleError}
-          className={`w-full h-full object-cover object-center block select-none pointer-events-none transition-opacity duration-200 ${
+          className={`w-full h-full object-cover object-bottom block select-none pointer-events-none transition-opacity duration-200 ${
             status === 'loaded' ? 'opacity-100' : 'opacity-0'
           }`}
         />
       )}
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-7 sm:h-10 bg-gradient-to-b from-[#F4EBE1] to-transparent"
+      />
     </div>
   );
 }
@@ -959,28 +964,30 @@ export default function App() {
                   key="ticket"
                   initial={{ opacity: 0, scale: 0.94 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="w-full drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
+                  className="w-auto -mx-4 sm:mx-0 drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
                 >
-                  <section className="ticket-cutout relative bg-[#F4EBE1] pt-8 pb-7 sm:pt-10 sm:pb-9 px-6 sm:px-12 rounded-[16px] text-center flex flex-col items-center w-full">
-                    <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
-                      Ура! Вы в лотерее!
-                    </h2>
-                    <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
-                      Ваш номер:
-                    </p>
+                  <section className="ticket-cutout relative bg-[#F4EBE1] rounded-[16px] overflow-hidden text-center flex flex-col items-center w-full">
+                    <div className="relative z-10 w-full pt-7 sm:pt-9 px-6 sm:px-12 flex flex-col items-center">
+                      <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
+                        Ура! Вы в лотерее!
+                      </h2>
+                      <p className="font-display text-lg sm:text-2xl uppercase tracking-widest text-[#1A1A1A]/60">
+                        Ваш номер:
+                      </p>
 
-                    <motion.div
-                      initial={{ scale: 0.6, rotate: -5 }}
-                      animate={{ scale: 1, rotate: -2 }}
-                      transition={{ type: 'spring', damping: 15 }}
-                      className="mt-2 mb-3 sm:mb-4 w-full flex justify-center"
-                    >
-                      <span
-                        className={`font-display ${getTicketNumberSizeClass(ticketNumber)} leading-none tabular-nums whitespace-nowrap text-[#EB5618] block drop-shadow-[6px_6px_0px_#1A1A1A]`}
+                      <motion.div
+                        initial={{ scale: 0.6, rotate: -5 }}
+                        animate={{ scale: 1, rotate: -2 }}
+                        transition={{ type: 'spring', damping: 15 }}
+                        className="mt-2 w-full flex justify-center"
                       >
-                        {ticketNumber}
-                      </span>
-                    </motion.div>
+                        <span
+                          className={`font-display ${getTicketNumberSizeClass(ticketNumber)} leading-none tabular-nums whitespace-nowrap text-[#EB5618] block drop-shadow-[6px_6px_0px_#1A1A1A]`}
+                        >
+                          {ticketNumber}
+                        </span>
+                      </motion.div>
+                    </div>
 
                     <TicketPhoto />
                   </section>
