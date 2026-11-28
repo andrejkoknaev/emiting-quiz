@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
+import ticketPhoto from './assets/ticket-photo.webp';
 
 const STORAGE_KEY = 'emiting_ticket';
 const AUTO_ADVANCE_DELAY_MS = 750;
 const BLUR_RESET_DELAY_MS = 150;
 const CLIENT_TIMEOUT_MS = 12000;
+const PHOTO_RETRY_DELAY_MS = 1500;
 
 const COURSES = ['1', '2', '3', '4'];
 const INSTITUTES = ['ЭМИТ', 'ИОН', 'ИГСУ', 'ИПНБ', 'ИНУП', 'Ресурс России'];
@@ -38,6 +40,63 @@ const cardVariants = {
     transition: { duration: 0.16 },
   }),
 };
+
+let cachedTicketImage = null;
+let ticketPhotoPreloadState = 'idle';
+
+export function preloadTicketPhoto() {
+  if (typeof window === 'undefined' || !ticketPhoto) return;
+  if (ticketPhotoPreloadState === 'loading' || ticketPhotoPreloadState === 'loaded') {
+    return;
+  }
+
+  ticketPhotoPreloadState = 'loading';
+
+  if (typeof document !== 'undefined' && !ticketPhoto.startsWith('data:')) {
+    const existingLink = document.head.querySelector('link[data-ticket-preload="true"]');
+    if (!existingLink) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = ticketPhoto;
+      link.setAttribute('fetchpriority', 'high');
+      link.setAttribute('data-ticket-preload', 'true');
+      document.head.appendChild(link);
+    }
+  }
+
+  const img = new Image();
+  img.decoding = 'async';
+  cachedTicketImage = img;
+
+  const finalizeLoad = () => {
+    if (img.naturalWidth > 0) {
+      ticketPhotoPreloadState = 'loaded';
+    } else {
+      ticketPhotoPreloadState = 'error';
+      cachedTicketImage = null;
+    }
+  };
+
+  img.onload = () => {
+    if (typeof img.decode === 'function') {
+      img.decode().then(finalizeLoad).catch(finalizeLoad);
+    } else {
+      finalizeLoad();
+    }
+  };
+
+  img.onerror = () => {
+    ticketPhotoPreloadState = 'error';
+    cachedTicketImage = null;
+  };
+
+  img.src = ticketPhoto;
+
+  if (img.complete && img.naturalWidth > 0) {
+    finalizeLoad();
+  }
+}
 
 function readSavedTicket() {
   try {
@@ -171,6 +230,108 @@ function AutoAdvanceBar() {
   );
 }
 
+function TicketPhoto() {
+  const imgRef = useRef(null);
+  const retryTimerRef = useRef(null);
+  const autoRetryDoneRef = useRef(false);
+  const [status, setStatus] = useState(() =>
+    ticketPhotoPreloadState === 'loaded' ? 'loaded' : 'loading',
+  );
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      ticketPhotoPreloadState = 'loaded';
+      setStatus('loaded');
+    }
+  }, [attempt]);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current !== null) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (status !== 'error') return undefined;
+
+    const handleOnline = () => {
+      setStatus('loading');
+      setAttempt((prev) => prev + 1);
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [status]);
+
+  const handleLoad = (e) => {
+    if (retryTimerRef.current !== null) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    if (e.currentTarget.naturalWidth > 0) {
+      ticketPhotoPreloadState = 'loaded';
+      setStatus('loaded');
+    } else {
+      setStatus('error');
+    }
+  };
+
+  const handleError = () => {
+    if (!autoRetryDoneRef.current && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+      autoRetryDoneRef.current = true;
+      retryTimerRef.current = setTimeout(() => {
+        retryTimerRef.current = null;
+        setStatus('loading');
+        setAttempt((prev) => prev + 1);
+      }, PHOTO_RETRY_DELAY_MS);
+      return;
+    }
+    setStatus('error');
+  };
+
+  return (
+    <div className="relative w-full max-w-[280px] sm:max-w-[340px] aspect-[4/3] rounded-xl overflow-hidden bg-[#F4EBE1] select-none">
+      {status === 'loading' && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[#E8DDD0] animate-pulse"
+        />
+      )}
+
+      {status === 'error' ? (
+        <div className="w-full h-full flex items-center justify-center px-4 bg-[#EADFD2]/60 text-center">
+          <span className="font-display text-base sm:text-lg text-[#EB5618]">
+            Заскринь свой номер!
+          </span>
+        </div>
+      ) : (
+        <img
+          key={attempt}
+          ref={imgRef}
+          src={ticketPhoto}
+          alt="Заскринь свой номер билета"
+          width={800}
+          height={600}
+          loading="eager"
+          decoding="async"
+          draggable={false}
+          onLoad={handleLoad}
+          onError={handleError}
+          className={`w-full h-full object-cover object-center block select-none pointer-events-none transition-opacity duration-200 ${
+            status === 'loaded' ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [initialTicket] = useState(() => readSavedTicket());
   const [ticketNumber, setTicketNumber] = useState(initialTicket);
@@ -236,6 +397,10 @@ export default function App() {
       blurResetTimerRef.current = null;
       setIsInputFocused(false);
     }, BLUR_RESET_DELAY_MS);
+  }, []);
+
+  useEffect(() => {
+    preloadTicketPhoto();
   }, []);
 
   useEffect(() => {
@@ -796,7 +961,7 @@ export default function App() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="w-full drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
                 >
-                  <section className="ticket-cutout relative bg-[#F4EBE1] pt-10 pb-9 px-6 sm:px-12 rounded-[16px] text-center flex flex-col items-center w-full">
+                  <section className="ticket-cutout relative bg-[#F4EBE1] pt-8 pb-7 sm:pt-10 sm:pb-9 px-6 sm:px-12 rounded-[16px] text-center flex flex-col items-center w-full">
                     <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
                       Ура! Вы в лотерее!
                     </h2>
@@ -808,7 +973,7 @@ export default function App() {
                       initial={{ scale: 0.6, rotate: -5 }}
                       animate={{ scale: 1, rotate: -2 }}
                       transition={{ type: 'spring', damping: 15 }}
-                      className="mt-2 mb-6 sm:mb-8 w-full flex justify-center"
+                      className="mt-2 mb-3 sm:mb-4 w-full flex justify-center"
                     >
                       <span
                         className={`font-display ${getTicketNumberSizeClass(ticketNumber)} leading-none tabular-nums whitespace-nowrap text-[#EB5618] block drop-shadow-[6px_6px_0px_#1A1A1A]`}
@@ -817,14 +982,7 @@ export default function App() {
                       </span>
                     </motion.div>
 
-                    <div className="w-full max-w-[280px] aspect-[4/3] bg-[#F4EBE1] border-2 border-dashed border-[#1A1A1A]/20 rounded-xl flex flex-col items-center justify-center px-4">
-                      <span className="font-display text-[#1A1A1A]/25 text-lg sm:text-xl">
-                        Место под фото
-                      </span>
-                      <span className="text-[#1A1A1A]/30 text-xs sm:text-sm font-bold mt-1">
-                        (заменим позже)
-                      </span>
-                    </div>
+                    <TicketPhoto />
                   </section>
                 </motion.div>
               )}
