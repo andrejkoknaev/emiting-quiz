@@ -629,10 +629,12 @@ export default function App() {
       </header>
 
       <main
-        className={`relative z-10 flex-1 w-full flex items-start justify-center pb-14 transition-[padding-top] duration-300 ease-out ${
+        className={`relative z-10 flex-1 w-full flex items-start justify-center pb-[calc(3.5rem_+_env(safe-area-inset-bottom))] transition-[padding-top] duration-300 ease-out ${
           isInputFocused
             ? 'pt-12 sm:pt-[max(10vh,96px)]'
-            : 'pt-[max(15vh,96px)] sm:pt-[max(15vh,118px)]'
+            : currentStepId === 'ticket'
+              ? 'pt-[max(12vh,90px)] sm:pt-[max(14vh,118px)]'
+              : 'pt-[max(15vh,96px)] sm:pt-[max(15vh,118px)]'
         }`}
       >
         <div className="w-[calc(100%-64px)] max-w-[560px] mx-auto flex flex-col items-center">
@@ -969,7 +971,7 @@ export default function App() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="w-auto -mx-5 sm:-mx-6 drop-shadow-[0_20px_28px_rgba(26,26,26,0.18)]"
                 >
-                  <section className="ticket-cutout relative bg-[#F4EBE1] pb-4 sm:pb-6 rounded-[16px] overflow-hidden text-center flex flex-col items-center w-full">
+                  <section className="ticket-cutout relative bg-[#F4EBE1] pb-8 sm:pb-10 rounded-[16px] overflow-hidden text-center flex flex-col items-center w-full">
                     <div className="relative z-10 w-full pt-6 sm:pt-9 px-6 sm:px-12 flex flex-col items-center">
                       <h2 className="font-display text-3xl sm:text-5xl text-[#1A1A1A] mb-1.5 leading-tight">
                         Ура! Вы в лотерее!
