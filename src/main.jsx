@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
+import App, { preloadTicketPhoto } from './App.jsx';
 import './index.css';
 
 const FONT_LOAD_TIMEOUT_MS = 2000;
@@ -48,6 +48,7 @@ async function waitForFonts() {
 
 async function bootstrap() {
   lockMobilePinchZoom();
+  preloadTicketPhoto();
   await waitForFonts();
 
   const rootEl = document.getElementById('root');
